@@ -1,0 +1,23 @@
+<?php
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\group\Entity\GroupContent;
+
+function csis_helpers_node_view(&$build, $entity, $display){
+ 
+  $groupid = array();
+  $relations = GroupContent::loadByEntity($entity);
+  foreach ( $relations as $relation) {
+    $groupid[] = $relation->getGroup()->id();
+  }
+  $entityinfo = array('step'=> $entity->id(), 'study'=> $groupid[0]);
+  $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = $entityinfo;
+  //if(count($groupid) > 0){
+  //  $build['#attached']['drupalSettings']['csisHelpers']['entityinfo']['study'] = $groupid[0];
+  //}
+}
+
+function csis_helpers_group_view(&$build,$entity, $display){
+  $entityinfo = array('step'=> null, 'study'=> $entity->id());
+  $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = $entityinfo;
+}

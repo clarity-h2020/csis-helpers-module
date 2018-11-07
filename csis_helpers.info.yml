@@ -1,0 +1,9 @@
+name: csis helpers
+description: Functions for clarity csis
+package: csis
+
+type: module
+core: 8.x
+
+dependencies:
+  - drupal:group
