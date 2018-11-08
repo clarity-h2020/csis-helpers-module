@@ -2,22 +2,39 @@
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\group\Entity\GroupContent;
+use Drupal\Core\Form\FormStateInterface;
 
-function csis_helpers_node_view(&$build, $entity, $display){
- 
+function csis_helpers_preprocess_group(&$build){
+  $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($build['group']);
+}
+
+function csis_helpers_preprocess_node(&$build){
+  $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($build['node']);
+  //$build['#attributes']['data-csis'] = json_encode($entityinfo);
+}
+
+function csis_helpers_form_node_form_alter (&$form, $form_state, $form_id){
+  $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($form_state->GetFormObject()->getEntity());
+  //$build['#attributes']['data-csis'] = json_encode($entityinfo);
+}
+
+function csis_helpers_form_group_form_alter (&$form, $form_state, $form_id){
+  $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($form_state->GetFormObject()->getEntity());
+  //$build['#attributes']['data-csis'] = json_encode($entityinfo);
+}
+
+function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
   $groupid = array();
   $relations = GroupContent::loadByEntity($entity);
   foreach ( $relations as $relation) {
     $groupid[] = $relation->getGroup()->id();
   }
   $entityinfo = array('step'=> $entity->id(), 'study'=> $groupid[0]);
-  $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = $entityinfo;
-  //if(count($groupid) > 0){
-  //  $build['#attached']['drupalSettings']['csisHelpers']['entityinfo']['study'] = $groupid[0];
-  //}
+  return $entityinfo;
+  //$build['#attributes']['data-csis'] = json_encode($entityinfo);
 }
 
-function csis_helpers_group_view(&$build,$entity, $display){
+function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
   $entityinfo = array('step'=> null, 'study'=> $entity->id());
-  $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = $entityinfo;
+  return$entityinfo;
 }
