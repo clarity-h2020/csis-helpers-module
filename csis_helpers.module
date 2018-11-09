@@ -14,12 +14,18 @@ function csis_helpers_preprocess_node(&$build){
 }
 
 function csis_helpers_form_node_form_alter (&$form, $form_state, $form_id){
-  $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($form_state->GetFormObject()->getEntity());
-  //$build['#attributes']['data-csis'] = json_encode($entityinfo);
+  $entity = $form_state->GetFormObject()->getEntity();
+  if($entity->id()){
+    $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
+  }
+    //$build['#attributes']['data-csis'] = json_encode($entityinfo);
 }
 
 function csis_helpers_form_group_form_alter (&$form, $form_state, $form_id){
-  $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($form_state->GetFormObject()->getEntity());
+  $entity = $form_state->GetFormObject()->getEntity();
+  if($entity->id()){
+    $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($entity);
+  }
   //$build['#attributes']['data-csis'] = json_encode($entityinfo);
 }
 
