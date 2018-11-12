@@ -3,6 +3,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\group\Entity\GroupContent;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\node\Entity\Node;
 
 function csis_helpers_preprocess_group(&$build){
   $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($build['group']);
@@ -29,6 +30,17 @@ function csis_helpers_form_group_form_alter (&$form, $form_state, $form_id){
   //$build['#attributes']['data-csis'] = json_encode($entityinfo);
 }
 
+function csis_helpers_preprocess_views_view(&$variables) {
+  $view = $variables['view'];
+  if ($view->id() == 'data_packages' && $view->current_display == 'browser'){ 
+    $variables['#attached']['library'][] = 'csis_helpers/entitybrowser-helpers';
+  }
+
+}
+
+
+
+
 function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
   $groupid = array();
   $relations = GroupContent::loadByEntity($entity);
@@ -44,3 +56,5 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
   $entityinfo = array('step'=> null, 'study'=> $entity->id());
   return$entityinfo;
 }
+
+

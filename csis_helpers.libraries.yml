@@ -1,0 +1,9 @@
+entitybrowser-helpers:
+  js:
+    js/csis-entitybrowser-helpers.js:
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings 
