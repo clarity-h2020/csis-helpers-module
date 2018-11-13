@@ -7,3 +7,12 @@ entitybrowser-helpers:
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings 
+stepdata-helpers:
+  js:
+    js/csis-stepdata-helpers.js:
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings 

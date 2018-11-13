@@ -10,7 +10,7 @@ function csis_helpers_preprocess_group(&$build){
 }
 
 function csis_helpers_preprocess_node(&$build){
-  $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($build['node']);
+ // $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($build['node']);
   //$build['#attributes']['data-csis'] = json_encode($entityinfo);
 }
 
@@ -25,7 +25,7 @@ function csis_helpers_form_node_form_alter (&$form, $form_state, $form_id){
 function csis_helpers_form_group_form_alter (&$form, $form_state, $form_id){
   $entity = $form_state->GetFormObject()->getEntity();
   if($entity->id()){
-    $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($entity);
+   $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($entity);
   }
   //$build['#attributes']['data-csis'] = json_encode($entityinfo);
 }
@@ -34,6 +34,9 @@ function csis_helpers_preprocess_views_view(&$variables) {
   $view = $variables['view'];
   if ($view->id() == 'data_packages' && $view->current_display == 'browser'){ 
     $variables['#attached']['library'][] = 'csis_helpers/entitybrowser-helpers';
+  }
+  if ($view->id() == 'step_data' && $view->current_display == 'block_1'){ 
+    $variables['#attached']['library'][] = 'csis_helpers/stepdata-helpers';
   }
 
 }
