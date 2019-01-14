@@ -1,18 +1,27 @@
-entitybrowser-helpers:
+entitybrowser_helpers:
   js:
-    js/csis-entitybrowser-helpers.js:
+    js/csis_entitybrowser_helpers.js:
   dependencies:
     - core/jquery
     - core/jquery.once
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings 
-stepdata-helpers:
+stepdata_helpers:
   js:
-    js/csis-stepdata-helpers.js:
+    js/csis_stepdata_helpers.js:
   dependencies:
     - core/jquery
     - core/jquery.once
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings 
+
+entityinfo_helpers:
+  js:
+    js/csis_entity_info.js:
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupalSettings
