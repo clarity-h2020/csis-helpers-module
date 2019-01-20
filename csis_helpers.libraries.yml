@@ -25,3 +25,13 @@ entityinfo_helpers:
     - core/jquery.once
     - core/drupal
     - core/drupalSettings
+
+progress_indicator:
+  js:
+    js/csis_progress_indicator.js:
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings

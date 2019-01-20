@@ -16,7 +16,7 @@ function csis_helpers_preprocess_node(&$build){
 }*/
 
 function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode){
- 
+
   $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
   $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
 
@@ -47,14 +47,15 @@ function csis_helpers_form_group_form_alter (&$form, $form_state, $form_id){
 }
 
 function csis_helpers_preprocess_views_view(&$variables) {
-  
+
   $view = $variables['view'];
-  if ($view->id() == 'data_packages' && $view->current_display == 'browser'){ 
+  if ($view->id() == 'data_packages' && $view->current_display == 'browser'){
      $variables['#attached']['library'][] = 'csis_helpers/entitybrowser_helpers';
   }
   if ($view->id() == 'step_data' && $view->current_display == 'block_1'){
      $variables['#attached']['library'][] = 'csis_helpers/stepdata_helpers';
   }
+  $variables['#attached']['library'][] = 'csis_helpers/progress_indicator';
 }
 
 function csis_js_alter(&$javascript, \Drupal\Core\Asset\AttachedAssetsInterface $assets){
