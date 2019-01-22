@@ -16,7 +16,7 @@
 		var lastPart = path.substr(path.lastIndexOf('/') + 1);
 		
 		// update progress indicator when user visits the current maximum step
-		if (activeTab == studyProgress && lastPart == "introduction") {
+		if (activeTab == studyProgress && lastPart == "introduction" && studyProgress !== undefined) {
 			//updateStudyProgress(studyID, studyProgress + 1);
 			getCsrfToken(function (csrfToken) {
 				updateStudyProgress(csrfToken, studyID, studyProgress + 1);
