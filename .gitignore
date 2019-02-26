@@ -37,3 +37,6 @@ xmlrpc.php
 /profiles
 /scripts
 /themes
+
+# Ignore temp stuff
+*.swp
