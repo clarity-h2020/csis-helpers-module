@@ -69,13 +69,14 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
   $relations = GroupContent::loadByEntity($entity);
   foreach ( $relations as $relation) {
     $groupid[] = $relation->getGroup()->id();
+    $groupuuid[] = $relation->getGroup()->uuid();
   }
-  $entityinfo = array('step'=> $entity->id(), 'study'=> $groupid[0]);
+  $entityinfo = array('step'=> $entity->id(),'step_uuid' => $entity->uuid(),'study'=> $groupid[0], 'study_uuid' => $groupuuid[0]);
   return $entityinfo;
 }
 
 function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
-  $entityinfo = array('step'=> null, 'study'=> $entity->id());
+  $entityinfo = array('step'=> null, 'study'=> $entity->id(),'study_uuid'=> $entity->uuid());
   return $entityinfo;
 }
 
