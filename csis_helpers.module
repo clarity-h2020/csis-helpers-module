@@ -1,6 +1,7 @@
 <?php
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupContent;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
@@ -78,6 +79,35 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
 function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
   $entityinfo = array('step'=> null, 'study'=> $entity->id(),'study_uuid'=> $entity->uuid());
   return $entityinfo;
+}
+
+function csis_helpers_node_insert (\Drupal\node\Entity\Node $node) {
+
+  // if a Report image is created -> add it as a group content depending on the referenced GL-step
+  if ($node->bundle() == 'report_image' && !$node->get('field_source_step')->isEmpty()) {
+    // get GL-step (which is already part of the Group)
+    $source_step_id = $node->get("field_source_step")->first()->getValue()['target_id'];
+    $gl_node = Node::load($source_step_id);
+
+    $plugin_id = 'group_node:' . $node->bundle();
+
+    // if GL-step exists -> load the corresponding group content and retrieve the group id
+    if ($gl_node) {
+      $group_id = -1;
+
+      $group_contents = GroupContent::loadByEntity($gl_node);
+      foreach ($group_contents as $group_content) {
+        $group_id = $group_content->getGroup()->id();
+      }
+
+      $group = Group::load($group_id);
+
+      // if group exists -> add report image as group content to that group
+      if($group) {
+        $group->addContent($node,$plugin_id);
+      }
+    }
+  }
 }
 
 
