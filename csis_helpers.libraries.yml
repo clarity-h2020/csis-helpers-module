@@ -35,3 +35,14 @@ progress_indicator:
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings
+    
+include_in_report:
+  js:
+    js/csis_include_in_report.js:
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings
+   
