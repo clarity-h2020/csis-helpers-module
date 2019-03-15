@@ -68,17 +68,41 @@ function csis_js_alter(&$javascript, \Drupal\Core\Asset\AttachedAssetsInterface 
 
 function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
   $groupid = array();
+  $groupuuid = array();
   $relations = GroupContent::loadByEntity($entity);
   foreach ( $relations as $relation) {
     $groupid[] = $relation->getGroup()->id();
     $groupuuid[] = $relation->getGroup()->uuid();
   }
-  $entityinfo = array('step'=> $entity->id(),'step_uuid' => $entity->uuid(),'study'=> $groupid[0], 'study_uuid' => $groupuuid[0]);
+
+  // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
+  $user = \Drupal::currentUser();
+  // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
+  $has_user_special_roles = empty($user->getRoles(TRUE));
+
+  $entityinfo = array(
+    'step'=> $entity->id(),
+    'step_uuid' => $entity->uuid(),
+    'study'=> $groupid[0],
+    'study_uuid' => $groupuuid[0],
+    'write_permissions' => ($has_user_special_roles ? 0 : 1)
+  );
   return $entityinfo;
 }
 
 function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
-  $entityinfo = array('step'=> null, 'study'=> $entity->id(),'study_uuid'=> $entity->uuid());
+
+  // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
+  $user = \Drupal::currentUser();
+  // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
+  $has_user_special_roles = empty($user->getRoles(TRUE));
+
+  $entityinfo = array(
+    'step'=> null,
+    'study'=> $entity->id(),
+    'study_uuid'=> $entity->uuid(),
+    'write_permissions' => ($has_user_special_roles ? 0 : 1)
+  );
   return $entityinfo;
 }
 
