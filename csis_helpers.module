@@ -54,7 +54,7 @@ function csis_helpers_preprocess_views_view(&$variables) {
   if ($view->id() == 'data_packages' && $view->current_display == 'browser'){
      $variables['#attached']['library'][] = 'csis_helpers/entitybrowser_helpers';
   }
-  if ($view->id() == 'step_data' && $view->current_display == 'block_1'){
+  if ($view->id() == 'step_data_collection'){
      $variables['#attached']['library'][] = 'csis_helpers/stepdata_helpers';
   }
   $variables['#attached']['library'][] = 'csis_helpers/progress_indicator';

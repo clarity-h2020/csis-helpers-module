@@ -11,6 +11,7 @@
           var id = $(this).attr('data-taxonomy-preview');
           var ajaxurl = '/rest/html/taxonomy/description/' + id +'?_format=json'
         } else {
+          console.log('click');
           var node = $(this).attr('data-node-preview');
           if (typeof node !== typeof undefined && node !== false) {
             var id = $(this).attr('data-node-preview');
@@ -22,7 +23,7 @@
           $.getJSON(ajaxurl, function(result){
             $('.item-preview').html(""); //(result[0].nid
             $.each( result[0], function( key, value ) {
-                $('.item-preview').append(value);
+                $('.item-preview').append('<div class="' + key + '" >' + value + '</div>');
             });
           });
         }
