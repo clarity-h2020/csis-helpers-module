@@ -11,7 +11,6 @@
           var id = $(this).attr('data-taxonomy-preview');
           var ajaxurl = '/rest/html/taxonomy/description/' + id +'?_format=json'
         } else {
-          console.log('click');
           var node = $(this).attr('data-node-preview');
           if (typeof node !== typeof undefined && node !== false) {
             var id = $(this).attr('data-node-preview');
@@ -25,6 +24,8 @@
             $.each( result[0], function( key, value ) {
                 $('.item-preview').append('<div class="' + key + '" >' + value + '</div>');
             });
+            $('.show-in-preview').removeClass('active');
+            $(event.target).addClass('active');
           });
         }
         event.stopPropagation();
