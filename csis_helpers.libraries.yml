@@ -45,4 +45,13 @@ include_in_report:
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings
-   
+    
+html2canvas:
+  js:
+    js/html2canvas.min.js:
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings     
