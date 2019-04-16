@@ -44,7 +44,7 @@ function csis_helpers_form_group_form_alter (&$form, $form_state, $form_id){
   $entity = $form_state->GetFormObject()->getEntity();
   if($entity->id()){
    $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($entity);
-   $form['#attached']['library'][] = 'cisis_helpers/entity_info_helpers';
+   $form['#attached']['library'][] = 'csis_helpers/entity_info_helpers';
 
   }
 }
