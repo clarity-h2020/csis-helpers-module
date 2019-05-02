@@ -22,6 +22,7 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
     $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
     $build['#attached']['library'][] = 'csis_helpers/include_in_report';
     $build['#attached']['library'][] = 'csis_helpers/html2canvas';
+    $build['#attached']['library'][] = 'csis_helpers/update_step_relations';
   }
 }
 
@@ -86,8 +87,8 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
   $entityinfo = array(
     'step'=> $entity->id(),
     'step_uuid' => $entity->uuid(),
-    'study'=> $groupid[0],
-    'study_uuid' => $groupuuid[0],
+    'study'=> (empty($groupid)? 0 : $groupid[0]),
+    'study_uuid' => (empty($groupuuid)? 0 : $groupuuid[0]),
     'write_permissions' => ($has_user_special_roles ? 0 : 1)
   );
   return $entityinfo;

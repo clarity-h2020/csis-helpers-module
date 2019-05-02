@@ -120,8 +120,10 @@ function postReportImage(csrfToken, stepUUID, fileUUID) {
     data: JSON.stringify(reportImageTemplate),
     success: function(data, status, xhr) {
       var reportImageUUID = data.data.id;
+      var reportImageNID = data.data.attributes.drupal_internal__nid;
       console.log("successfully posted new report image with uuid: " + reportImageUUID);
-      postReportImageRelationship(csrfToken, stepUUID, reportImageUUID);
+      // no need to create new relationship in GL-step, since ReportImage already stores relation to a GL-Step
+      //postReportImageRelationship(csrfToken, stepUUID, reportImageUUID, reportImageNID);
     },
     error: function() {
       console.log("error posting report image");
@@ -130,7 +132,7 @@ function postReportImage(csrfToken, stepUUID, fileUUID) {
 }
 
 
-function postReportImageRelationship(csrfToken, stepUUID, reportImageUUID) {
+function postReportImageRelationship(csrfToken, stepUUID, reportImageUUID, reportImageNID) {
   postData = {
     'data': [{
       'type': 'node--report_image',

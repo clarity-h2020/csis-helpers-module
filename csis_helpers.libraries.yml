@@ -55,3 +55,13 @@ html2canvas:
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings     
+
+update_step_relations:
+  js:
+    js/csis_update_step_relations.js:
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings   
