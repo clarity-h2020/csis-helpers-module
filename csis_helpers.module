@@ -17,7 +17,7 @@ function csis_helpers_preprocess_node(&$build){
 }*/
 
 function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode){
-  if(in_array($view_mode,array('introduction','data','table','maps','twins','summary','sce'))){
+  if ($entity->bundle() == "gl_step") {
     $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
     $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
     $build['#attached']['library'][] = 'csis_helpers/include_in_report';
