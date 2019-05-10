@@ -178,8 +178,11 @@ function openEditForm(reportImageNID) {
     var link = jQuery('<a>');
     link.addClass('use-ajax btn btn-sm btn-default');
     link.attr('href','/node/' + reportImageNID + '/edit?destination=' + currentPath);
-    link.attr('data-dialog-options','{"width":700, "dialogClass":""}');
-    link.attr('data-dialog-type', 'dialog')
+    link.attr('data-dialog-options','{"width":"80%", "dialogClass":"report-image-edit-form"}');
+    link.attr('data-dialog-type', 'dialog');
+    link.attr('id', 'report-image-edit-link');
     link.text('edit comment');
-    jQuery(link)[0].click();
+    jQuery('.snapshot').append(link); // append link-element to something, otherwise attachBehaviors() has no effect
+    Drupal.attachBehaviors(); // necessary for binding "use-ajax" class to the onclick-handler
+    jQuery('#report-image-edit-link').click();
 }
