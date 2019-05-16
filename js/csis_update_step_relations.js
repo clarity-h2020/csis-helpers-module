@@ -23,6 +23,9 @@
     	  else {
     		  console.log("removing " + targetType + "-relation to/from GL-Step");
     	  }
+    	  
+    	  // deactivate other buttons, so that only one AJAX request is being handled at a time (prevent problems with interferences)
+    	  $('span.update-step-relations').attr('disabled', 'disabled');
 
     	  // only necessary if this functionality will be used for other content types as well
     	  if (targetType == "twin" || targetType == "showcase") {
@@ -44,8 +47,8 @@
 	    	  }
 	    	  
 	    	  // replace button with css loading-animation
-	    	  $(this).replaceWith('<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>');	    	  	    	  
-	    	  console.log("bin replaced worden");
+	    	  $(this).hide();
+              $(this).after('<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>');	    	  	    	  
     	  }
       });
       
@@ -79,7 +82,14 @@ function updateRelationForStep(csrfToken, action, stepUUID, twinUUID, postData) 
 			  //console.log(status);
 			  //console.log(xhr);
 			  console.log("successfully updated relationship for GL-Step");
-			  updateView();
+			  
+			  // if element in "Available-Table", it needs to be removed manually, since View is not auto-updated (due to otherwise lost filter options)
+			  if (action == "post") {
+			      jQuery('span[data-uuid="'+twinUUID+'"]').closest('tr').remove();
+			  }
+			  // once AJAX-request is done re-activate buttons
+			  jQuery('span.update-step-relations').removeAttr("disabled");
+			  updateView();   
 		  }
 	});
 }
@@ -90,9 +100,9 @@ function updateView() {
     var myViews;
 
     jQuery.each( instances , function getInstance( index, element){
-        if (element.settings.view_display_id == "included_twins" || element.settings.view_display_id == "non_included_twins"){
+        if (element.settings.view_display_id == "included_twins" || element.settings.view_display_id == "included_twins_ajax"){
         	myViews = element.element_settings.selector;
-        	jQuery(myViews).trigger('RefreshView');
+        	jQuery(myViews).triggerHandler('RefreshView');
         	console.log("view refreshed");
         }
 
@@ -110,8 +120,7 @@ function initializeButtons(stepUUID) {
 		    "Content-Type": "application/vnd.api+json",
 		    "Accept": "application/vnd.api+json"
 		  },
-		  success: function(data) {
-			  
+		  success: function(data) {  
 			  // for each found Twin change the Button to do a DELETE request (since by default they perform a POST)
 	          for (var index in data.data) {        	  	        	
 	        	  jQuery('span[data-uuid="'+data.data[index]['id']+'"]').attr('data-action', 'delete').text('Remove from Report');
@@ -122,4 +131,3 @@ function initializeButtons(stepUUID) {
 		  }
 	});
 }
-
