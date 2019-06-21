@@ -1,0 +1,11 @@
+
+csis_helpers.default_form:
+  path: '/admin/config/csis_helpers/default'
+  defaults:
+    _form: '\Drupal\csis_helpers\Form\DefaultForm'
+    _title: 'DefaultForm'
+  requirements:
+    _permission: 'access administration pages'
+  options:
+    _admin_route: TRUE
+

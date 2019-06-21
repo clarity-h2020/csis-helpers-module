@@ -48,12 +48,17 @@ function csis_helpers_form_group_form_alter (&$form, $form_state, $form_id){
    $form['#attached']['library'][] = 'csis_helpers/entity_info_helpers';
 
   }
+
+  // hide Delete-button for Studies everywhere except for the default Edit-form
+  if ($entity->bundle() == "study" && $form['form_id']['#value'] != "group_study_edit_form") {
+    $form['actions']['delete']['#access'] = false;
+  }
 }
 
 function csis_helpers_preprocess_views_view(&$variables) {
 
   $view = $variables['view'];
-\Drupal::logger('csis helpers')->notice($view->id());
+  //\Drupal::logger('csis helpers')->notice($view->id());
   if ($view->id() == 'data_packages' && $view->current_display == 'browser'){
      $variables['#attached']['library'][] = 'csis_helpers/entitybrowser_helpers';
   }
@@ -109,6 +114,61 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
   return $entityinfo;
 }
 
+
+/**
+ * Implements hook_entity_presave().
+ * Needed currently for triggering Emikat once a Study is advanced enough or relevant information has changed
+ */
+function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity) {
+
+  if ($entity->bundle() == "study") {
+    /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
+    $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
+
+    // check if Study contains all relevant information for Emikat and if they were changed
+    try {
+      $trigger = $emikatService->checkStudyChanges($entity);
+      if ($trigger) {
+        // changes are relevant -> notify Emikat
+        $result = $emikatService->triggerEmikat($entity);
+
+        if ($result) {
+          \Drupal::logger('csis_helpers')->notice(
+            "Emikat was notified about change in Study %id",
+            array(
+              '%id' => $entity->id(),
+            )
+          );
+        } else {
+          //remove this after testing
+          \Drupal::logger('csis_helpers')->notice(
+            "Emikat not notified about change in Study %id due to error in process (see log files about 'EmikatHelperFunctions')",
+            array(
+              '%id' => $entity->id(),
+            )
+          );
+        }
+      } else {
+        // \Drupal::logger('csis_helpers')->notice(
+        //   "Emikat not triggered (trigger == false) about change in Study %id",
+        //   array(
+        //     '%id' => $entity->id(),
+        //   )
+        // );
+      }
+
+    } catch (Exception $e) {
+      \Drupal::logger('csis_helpers')->error(
+        "Study-Request to Emikat failed due to an error: %error",
+        array(
+          '%error' => $e->getMessage(),
+        )
+      );
+    }
+  }
+
+}
+
 function csis_helpers_node_insert (\Drupal\node\Entity\Node $node) {
   // if a Report image is created -> add it as a group content depending on the referenced GL-step
   if ($node->bundle() == 'report_image' && !$node->get('field_source_step')->isEmpty()) {
@@ -136,5 +196,3 @@ function csis_helpers_node_insert (\Drupal\node\Entity\Node $node) {
     }
   }
 }
-
-

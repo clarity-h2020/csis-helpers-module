@@ -6,7 +6,7 @@ entitybrowser_helpers:
     - core/jquery.once
     - core/drupal
     - core/drupal.ajax
-    - core/drupalSettings 
+    - core/drupalSettings
 stepdata_helpers:
   js:
     js/csis_stepdata_helpers.js:
@@ -15,7 +15,7 @@ stepdata_helpers:
     - core/jquery.once
     - core/drupal
     - core/drupal.ajax
-    - core/drupalSettings 
+    - core/drupalSettings
 
 entityinfo_helpers:
   js:
@@ -35,7 +35,7 @@ progress_indicator:
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings
-    
+
 include_in_report:
   js:
     js/csis_include_in_report.js:
@@ -45,7 +45,7 @@ include_in_report:
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings
-    
+
 html2canvas:
   js:
     js/html2canvas.min.js:
@@ -54,7 +54,7 @@ html2canvas:
     - core/jquery.once
     - core/drupal
     - core/drupal.ajax
-    - core/drupalSettings     
+    - core/drupalSettings
 
 update_step_relations:
   js:
@@ -64,4 +64,4 @@ update_step_relations:
     - core/jquery.once
     - core/drupal
     - core/drupal.ajax
-    - core/drupalSettings   
+    - core/drupalSettings

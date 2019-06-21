@@ -1,0 +1,3 @@
+services:
+  csis_helpers.emikat_helper_functions:
+    class: Drupal\csis_helpers\Utils\EmikatHelperFunctions
