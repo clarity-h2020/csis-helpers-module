@@ -37,7 +37,7 @@ var reportImageTemplate = {
             $('.snapshot', context).once("include_in_report").on('click', function(event) {
 
                 // hide "Include in Report button and show loading animation  
-                $(this).hide()
+                $(this).hide();
                 $(this).parent().after('<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>');
 
                 var targetNid = $(this).attr('data-camera-target'); // not used anymore, so data-camera-target not needed anymore?
@@ -45,7 +45,7 @@ var reportImageTemplate = {
                 var stepUUID = drupalSettings.csisHelpers.entityinfo.step_uuid;
                 var stepID = drupalSettings.csisHelpers.entityinfo.step;
                 var studyID = drupalSettings.csisHelpers.entityinfo.study;
-                var autoComment = $('div#reportInfoElement').text()
+                var autoComment = $('div#reportInfoElement').text();
 
                 // update Report Image template
                 reportImageTemplate.data.attributes.title = "Report Image for Study " + studyID + " Step " + stepID;
@@ -58,7 +58,7 @@ var reportImageTemplate = {
                 var imageName = "map-snapshot.png"
                     if ($('#characteriseHazard-table-container').length) {
                         reportImageTemplate.data.relationships.field_report_category.data.id = "36a3bb55-c6ff-40a4-92c3-92258e7d1374";
-                        imageName = "table-snapshot.png"
+                        imageName = "table-snapshot.png";
                     }
 
                 // only take screenshot if Element	has height and width, otherwise stored file cannot be displayed properly
@@ -163,7 +163,7 @@ function postReportImageRelationship(csrfToken, stepUUID, reportImageUUID, repor
         },
         data: JSON.stringify(postData),
         success: function(data, status, xhr) {
-            console.log("successfully posted new relationship between GL-Step and Report image")	
+            console.log("successfully posted new relationship between GL-Step and Report image");	
         },
         error: function(data, status, xhr) {
             console.log("error posting new relationship");
@@ -172,7 +172,6 @@ function postReportImageRelationship(csrfToken, stepUUID, reportImageUUID, repor
 }
 
 
-//Todo: currently this reloads the whole page instead of opening a modal using ajax even it's setup properly... WHY?!
 function openEditForm(reportImageNID) {
     var currentPath = window.location.pathname;
     var link = jQuery('<a>');
