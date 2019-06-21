@@ -150,7 +150,7 @@ class EmikatHelperFunctions {
       );
 
       $response = json_decode($request->getBody()->getContents(), true);
-      kint($response);
+      //kint($response);
       $emikatID = $response["id"];
     } catch (RequestException $e) {
       \Drupal::logger('EmikatHelperFunctions')->error(
@@ -188,7 +188,7 @@ class EmikatHelperFunctions {
       );
 
       $response = json_decode($request->getBody()->getContents());
-      kint($response);
+      //kint($response);
     } catch (RequestException $e) {
       \Drupal::logger('EmikatHelperFunctions')->error(
         "Post Request to Emikat returned an error: %error",
