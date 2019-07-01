@@ -4,7 +4,6 @@
   Drupal.behaviors.csis_stepdata_helpers = {
     attach: function (context, settings) {
       $('.show-in-preview').on('click', function(event){
-        console.log('click');
         var taxonomy = $(this).attr('data-taxonomy-preview');
           // For some browsers, `attr` is undefined; for others,
           // `attr` is false.  Check for both.
@@ -32,7 +31,7 @@
             Drupal.attachBehaviors();
           });
         }
-        event.stopPropagation();
+        event.stopImmediatePropagation();
       });
     }
   };
