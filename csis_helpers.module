@@ -5,6 +5,7 @@ use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupContent;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
+use Drupal\Core\Access\AccessResult;
 
 /*function csis_helpers_preprocess_group(&$build){
   $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($build['group']);
@@ -195,4 +196,15 @@ function csis_helpers_node_insert (\Drupal\node\Entity\Node $node) {
       }
     }
   }
+}
+
+/**
+ * Implements hook_jsonapi_entity_filter_access() for 'study' group.
+ * This is necessary to fix this issue: https://www.drupal.org/project/jsonapi/issues/3037519
+ */
+function csis_helpers_jsonapi_entity_filter_access(\Drupal\Core\Entity\EntityTypeInterface $entity_type, \Drupal\Core\Session\AccountInterface $account)
+{
+  return ([
+    JSONAPI_FILTER_AMONG_ALL => AccessResult::allowed()
+  ]);
 }
