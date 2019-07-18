@@ -122,7 +122,8 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
  */
 function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity) {
 
-  if ($entity->bundle() == "study") {
+  // triggering Emikat only needed for Studies (additionally: don't trigger it in a local environment)
+  if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() != "http://localhost:8080") {
     /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
     $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
 
