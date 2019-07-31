@@ -36,7 +36,7 @@ var reportImageTemplate = {
         attach: function(context, settings) {
             $('.snapshot', context).once("include_in_report").on('click', function(event) {
 
-                // hide "Include in Report button and show loading animation  
+                // hide "Include in Report button and show loading animation
                 $(this).hide();
                 $(this).parent().after('<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>');
 
@@ -64,7 +64,7 @@ var reportImageTemplate = {
                 // only take screenshot if Element	has height and width, otherwise stored file cannot be displayed properly
                 if ($('.field.field--name-field-react-mount').height() > 0) {
                     // create screenshot and send POST request for it via JSON:API
-                    html2canvas(document.getElementById(targetDiv), {useCORS:true, async:false, logging: false, foreignObjectRendering: false}).then(canvas => {
+                    html2canvas(document.getElementById(targetDiv), { useCORS: true, allowTaint: true, async:false, logging: false, foreignObjectRendering: false}).then(canvas => {
                         canvas.toBlob(function(blob) {
                             getCsrfToken(function(csrfToken) {
                                 postScreenshotFile(csrfToken, stepUUID, blob, imageName);
@@ -132,7 +132,7 @@ function postReportImage(csrfToken, stepUUID, fileUUID) {
             var reportImageNID = data.data.attributes.drupal_internal__nid;
             console.log("successfully posted new report image with uuid: " + reportImageUUID);
             // no need to create new relationship in GL-step, since ReportImage already stores relation to a GL-Step
-            //postReportImageRelationship(csrfToken, stepUUID, reportImageUUID, reportImageNID);	      
+            //postReportImageRelationship(csrfToken, stepUUID, reportImageUUID, reportImageNID);
 
             // open Edit form for the new Report Image
             openEditForm(reportImageNID);
@@ -163,7 +163,7 @@ function postReportImageRelationship(csrfToken, stepUUID, reportImageUUID, repor
         },
         data: JSON.stringify(postData),
         success: function(data, status, xhr) {
-            console.log("successfully posted new relationship between GL-Step and Report image");	
+            console.log("successfully posted new relationship between GL-Step and Report image");
         },
         error: function(data, status, xhr) {
             console.log("error posting new relationship");
