@@ -79,10 +79,22 @@ function csis_js_alter(&$javascript, \Drupal\Core\Asset\AttachedAssetsInterface 
 function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
   $groupid = array();
   $groupuuid = array();
+  $groupEmikatID = null;
+  $datapackageUUID = null;
+  $groupArea = null;
   $relations = GroupContent::loadByEntity($entity);
+
   foreach ( $relations as $relation) {
     $groupid[] = $relation->getGroup()->id();
     $groupuuid[] = $relation->getGroup()->uuid();
+    $groupEmikatID = $relation->getGroup()->get('field_emikat_id')->value;
+    $groupDatapackageID = $relation->getGroup()->get('field_data_package')->target_id;
+    $groupArea = $relation->getGroup()->get('field_area')->value;
+
+    if ($groupDatapackageID) {
+      $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
+      $datapackageUUID = $datapackageNode->uuid();
+    }
   }
 
   // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
@@ -95,12 +107,22 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
     'step_uuid' => $entity->uuid(),
     'study'=> (empty($groupid)? 0 : $groupid[0]),
     'study_uuid' => (empty($groupuuid)? 0 : $groupuuid[0]),
+    'study_emikat_id' => $groupEmikatID,
+    'study_datapackage_uuid' => $datapackageUUID,
+    'study_area' => $groupArea,
     'write_permissions' => ($has_user_special_roles ? 0 : 1)
   );
   return $entityinfo;
 }
 
 function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
+  $datapackageUUID = null;
+  $groupDatapackageID = $entity->get('field_data_package')->target_id;
+  if ($groupDatapackageID) {
+    $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
+    $datapackageUUID = $datapackageNode->uuid();
+  }
+
   // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
   $user = \Drupal::currentUser();
   // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
@@ -110,6 +132,9 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
     'step'=> null,
     'study'=> $entity->id(),
     'study_uuid'=> $entity->uuid(),
+    'study_emikat_id' => $entity->get('field_emikat_id')->value,
+    'study_datapackage_uuid' => $datapackageUUID,
+    'study_area' => $entity->get('field_area')->value,
     'write_permissions' => ($has_user_special_roles ? 0 : 1)
   );
   return $entityinfo;
