@@ -116,28 +116,31 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
 }
 
 function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
-  $datapackageUUID = null;
-  $groupDatapackageID = $entity->get('field_data_package')->target_id;
-  if ($groupDatapackageID) {
-    $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
-    $datapackageUUID = $datapackageNode->uuid();
+  // specify GroupType explicitly, since some fields might be unique to certain GroupTypes only
+  if ($entity->getGroupType()->id() == "study") {
+    $datapackageUUID = null;
+    $groupDatapackageID = $entity->get('field_data_package')->target_id;
+    if ($groupDatapackageID) {
+      $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
+      $datapackageUUID = $datapackageNode->uuid();
+    }
+
+    // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
+    $user = \Drupal::currentUser();
+    // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
+    $has_user_special_roles = empty($user->getRoles(TRUE));
+
+    $entityinfo = array(
+      'step'=> null,
+      'study'=> $entity->id(),
+      'study_uuid'=> $entity->uuid(),
+      'study_emikat_id' => $entity->get('field_emikat_id')->value,
+      'study_datapackage_uuid' => $datapackageUUID,
+      'study_area' => $entity->get('field_area')->value,
+      'write_permissions' => ($has_user_special_roles ? 0 : 1)
+    );
+    return $entityinfo;
   }
-
-  // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
-  $user = \Drupal::currentUser();
-  // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
-  $has_user_special_roles = empty($user->getRoles(TRUE));
-
-  $entityinfo = array(
-    'step'=> null,
-    'study'=> $entity->id(),
-    'study_uuid'=> $entity->uuid(),
-    'study_emikat_id' => $entity->get('field_emikat_id')->value,
-    'study_datapackage_uuid' => $datapackageUUID,
-    'study_area' => $entity->get('field_area')->value,
-    'write_permissions' => ($has_user_special_roles ? 0 : 1)
-  );
-  return $entityinfo;
 }
 
 
