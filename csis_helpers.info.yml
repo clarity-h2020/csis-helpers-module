@@ -1,5 +1,5 @@
 name: csis helpers
-description: Functions for clarity csis
+description: Functions for clarity csis. To configure Emikat credententials, visit "/admin/config/csis_helpers/default"
 package: csis
 
 type: module
