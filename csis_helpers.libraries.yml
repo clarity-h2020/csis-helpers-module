@@ -56,6 +56,16 @@ html2canvas:
     - core/drupal.ajax
     - core/drupalSettings
 
+seamless:
+  js:
+    js/seamless.parent.js: {preprocess: false}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings
+
 update_step_relations:
   js:
     js/csis_update_step_relations.js:
