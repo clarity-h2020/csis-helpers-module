@@ -6,19 +6,10 @@ use Drupal\group\Entity\GroupContent;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
 use Drupal\Core\Access\AccessResult;
-
-/*function csis_helpers_preprocess_group(&$build){
-  $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($build['group']);
-  $vars['content']['#attached']['library'][] = 'csis_helpers/entity_info_helpers';
-}
-
-function csis_helpers_preprocess_node(&$build){
-  $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($build['node']);
-    $vars['content']['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
-}*/
+use Drupal\taxonomy\Entity\Term;
 
 function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode){
-  if ($entity->bundle() == "gl_step") {
+  if ($entity->bundle() == "gl_step" && $view_mode != "compact") {
     $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
     $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
     $build['#attached']['library'][] = 'csis_helpers/include_in_report';
@@ -83,6 +74,7 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
   $groupEmikatID = null;
   $datapackageUUID = null;
   $groupArea = null;
+  $groupEaaName = null;
   $relations = GroupContent::loadByEntity($entity);
 
   foreach ( $relations as $relation) {
@@ -91,11 +83,17 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
     $groupEmikatID = $relation->getGroup()->get('field_emikat_id')->value;
     $groupDatapackageID = $relation->getGroup()->get('field_data_package')->target_id;
     $groupArea = $relation->getGroup()->get('field_area')->value;
+    $groupCityTerm = (!$relation->getGroup()->get('field_city_region')->isEmpty() ? Term::load($relation->getGroup()->get('field_city_region')->target_id) : false);
 
     if ($groupDatapackageID) {
       $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
       $datapackageUUID = $datapackageNode->uuid();
     }
+
+    if ($groupCityTerm) {
+      $groupEeaName = $groupCityTerm->get('field_eea_city_profile_name')->value;
+    }
+
   }
 
   // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
@@ -111,21 +109,34 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
     'study_emikat_id' => $groupEmikatID,
     'study_datapackage_uuid' => $datapackageUUID,
     'study_area' => $groupArea,
+    'eea_city_name' => $groupEeaName,
     'write_permissions' => ($has_user_special_roles ? 0 : 1)
   );
   return $entityinfo;
 }
 
+/**
+ * sets for each Study group the $entityifno variable
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ * @return void
+ */
 function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
   // specify GroupType explicitly, since some fields might be unique to certain GroupTypes only
   if ($entity->getGroupType()->id() == "study") {
     $datapackageUUID = null;
+    $eeaName = null;
     $groupDatapackageID = $entity->get('field_data_package')->target_id;
     if ($groupDatapackageID) {
       $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
       $datapackageUUID = $datapackageNode->uuid();
     }
 
+    // load city term, if is has already been set in the Study
+    $cityTerm = (!$entity->get('field_city_region')->isEmpty() ? Term::load($entity->get('field_city_region')->target_id): false);
+    if ($cityTerm) {
+      $eeaName = $cityTerm->get('field_eea_city_profile_name')->value;
+    }
     // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
     $user = \Drupal::currentUser();
     // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
@@ -133,11 +144,13 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
 
     $entityinfo = array(
       'step'=> null,
+      'step_uuid' => null,
       'study'=> $entity->id(),
       'study_uuid'=> $entity->uuid(),
       'study_emikat_id' => $entity->get('field_emikat_id')->value,
       'study_datapackage_uuid' => $datapackageUUID,
       'study_area' => $entity->get('field_area')->value,
+      'eea_city_name' => $eeaName,
       'write_permissions' => ($has_user_special_roles ? 0 : 1)
     );
     return $entityinfo;
