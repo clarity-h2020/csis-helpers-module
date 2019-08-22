@@ -9,7 +9,18 @@ This module is a collection of functions that allow other components to interact
 - notifying Emikat about new Studies and reveicing the EmikatID for each individual Study
 
 ### $entityinfo variable
-For this variable certain information about the Study group and the involved group nodes are extracted and provided as JSON in the DrupalSettings. Those DrupalSettings are loaded via inline javascript as JSON and can be accessed by other modules like e.g. the map component.
+For this variable certain information about the Study group and the involved group nodes are extracted and provided as JSON in the DrupalSettings. Those DrupalSettings are loaded via inline javascript as JSON and can be accessed by other modules like e.g. the map component. Two different functions are required, since the $entityinfo can be either requested through a Node entity or a Group entity.
+
+Currently it stores the following values (if applicable/set in the entity, otherwise value is `null`):
+- `step`: NodeID of the GL-Step
+- `step_uuid`: UUID of the GL-Step
+- `study`: GroupID of the Study group
+- `study_uuid`: UUID of the Study group
+- `study_emikat_id`: Emikat-internal ID to each Study advanced enough for calculations 
+- `study_datapackage_uuid`: UUID of the data package used in the Study
+- `study_area`: bounding box information of the study area, e.g.:(POLYGON((coordinates1, coordinates2,...))) 
+- `eea_city_name`: EEA city name of the City/region selected in the Study
+- `write_permissions`: '1' if user has the right to edit the Study, '0' otherwise
 
 ### Including report images in the study (a.k.a. "Taking screenshots of maps")
 To create screenshots of dynamic content (like maps) html2canvas is used to generate the screenshots. Using the JSON:API the resulting canvas is stored as a file on the Drupal system. After that a new Report image content type is posted linking to this new file.
