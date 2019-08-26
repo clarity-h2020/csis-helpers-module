@@ -42,7 +42,7 @@ var reportImageTemplate = {
 
                 var targetNid = $(this).attr('data-camera-target'); // not used anymore, so data-camera-target not needed anymore?
                 var targetElement = undefined;
-                if ($('.field.field--name-field-react-mount')) {
+                if ($('.field.field--name-field-react-mount').get(0)) {
                     targetElement = $('.field.field--name-field-react-mount').children("div").children("div").attr("id");
                     console.warn('detected deprecated ReactMountNode: ' + targetElement + ', please replace by Extended iFrame')
                 } else if ($('<iframe>').get(0)) {
