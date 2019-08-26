@@ -10,7 +10,7 @@ entitybrowser_helpers:
 entitybrowser_reorder:
   css:
     layout:
-      css/entity-broeser-changes.js: {}
+      css/entity-browser-changes.css: {}
 stepdata_helpers:
   js:
     js/csis_stepdata_helpers.js:
