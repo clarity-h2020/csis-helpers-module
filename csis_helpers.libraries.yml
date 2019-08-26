@@ -7,6 +7,10 @@ entitybrowser_helpers:
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings
+entitybrowser_reorder:
+  css:
+    layout:
+      css/entity-broeser-changes.js: {}
 stepdata_helpers:
   js:
     js/csis_stepdata_helpers.js:

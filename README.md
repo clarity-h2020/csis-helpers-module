@@ -35,3 +35,8 @@ The steps of a Study should be done in a predefined order, so it is necessary to
 
 ### Communication with Emikat
 This module checks each time a Study gets updated if Emikat is aware of this Study or not. In case Emikat is already aware of this Study, the CSIS received an EmikatID as a response, which is stored inside the Study.
+
+### Modifications for Entity browsers
+There are two libraies in this module which you can attach to a view entity browser display of a view.
+- `entitybrowser_helpers`: this attaches a javascript to the entity browser which implements a single selection behavior. ON selection of an element all othe selected elements get unselected
+- `entitybrowser_reorder`: Add css which reorders the elements of a view from header-content-footer to footer-content-header so that controlls in the footer will not be only reachable by scrolling. Additional it also reverts the order of the footer content of the view.

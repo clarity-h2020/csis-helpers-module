@@ -1,0 +1,16 @@
+/*
+ * Change teh order of theelement of the entity browser
+ * so that the select button will not "disappear" into the range of the window to which you have scroll
+ */
+
+ form.entity-browser-form > view {
+  display: flex;
+  flex-direction: column;
+  flex-flow: column-reverse;
+ }
+
+ form.entity-browser-form > view > .view_footer {
+  display: flex;
+  flex-direction: column;
+  flex-flow: column-reverse;
+ }

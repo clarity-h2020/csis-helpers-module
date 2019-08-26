@@ -38,7 +38,7 @@ function csis_helpers_form_group_form_alter (&$form, $form_state, $form_id){
   $entity = $form_state->GetFormObject()->getEntity();
   if($entity->id()){
    $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($entity);
-   $form['#attached']['library'][] = 'csis_helpers/entity_info_helpers';
+   $form['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
 
   }
 
@@ -54,6 +54,7 @@ function csis_helpers_preprocess_views_view(&$variables) {
   //\Drupal::logger('csis helpers')->notice($view->id());
   if ($view->id() == 'data_packages' && $view->current_display == 'browser'){
      $variables['#attached']['library'][] = 'csis_helpers/entitybrowser_helpers';
+     $variables['#attached']['library'][] = 'csis_helpers/entitybrowser_reorder';
   }
 
   $variables['#attached']['library'][] = 'csis_helpers/stepdata_helpers';
@@ -126,6 +127,7 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
   if ($entity->getGroupType()->id() == "study") {
     $datapackageUUID = null;
     $eeaName = null;
+    // Load the tdata package
     $groupDatapackageID = $entity->get('field_data_package')->target_id;
     if ($groupDatapackageID) {
       $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
