@@ -9,7 +9,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\taxonomy\Entity\Term;
 
 function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode){
-  if ($entity->bundle() == "gl_step" && $view_mode != "compact") {
+  if ($entity->bundle() == ("gl_step" || "data_package" || "data_package_metadata") && $view_mode != "compact") {
     $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
     $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
     $build['#attached']['library'][] = 'csis_helpers/include_in_report';
@@ -67,14 +67,75 @@ function csis_js_alter(&$javascript, \Drupal\Core\Asset\AttachedAssetsInterface 
  // kint($javascript);
 }
 
-
 /**
  * Extract information from **node** entity.
  * 
+ * Attention: data_package_metadata is the machine name of Data Package **Resource**!
+ * 
  * @param \Drupal\Core\Entity\EntityInterface $entity
- * @return void
+ * @return Drupal\node\Entity\Node[]
  */
 function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
+  $type = $entity->bundle();
+ switch ( $type) {
+  case 'gl_step': return csis_helpers_node_entity_info_study($entity);
+  case 'data_package': return csis_helpers_node_entity_info_datapackage($entity);
+  case 'data_package_metadata': return csis_helpers_node_entity_info_resource($entity);
+  default: return csis_helpers_node_entity_info_study($entity);
+ }
+}
+
+/**
+ * Extract information from study (?!) **node** entity.
+ * 
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ * @return Drupal\node\Entity\Node[]
+ */
+function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInterface $entity){
+
+  // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
+  $user = \Drupal::currentUser();
+  // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
+  $has_user_special_roles = empty($user->getRoles(TRUE));
+
+  $entityinfo = array(
+    'uuid' => $entity->uuid(),
+    'type' => $entity->getEntityType()->getLabel(), 
+    'label' => $entity->label(), //Drupal WTF? why label() and not getLabel() ?!
+    'title' => $entity->get('title')->value,
+    'datapackage_uuid' => $entity->uuid(),
+    'write_permissions' => ($has_user_special_roles ? 0 : 1)
+  );
+  return $entityinfo;
+}
+
+/**
+ * Extract information from study (?!) **node** entity.
+ * 
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ * @return Drupal\node\Entity\Node[]
+ */
+function csis_helpers_node_entity_info_resource(\Drupal\Core\Entity\EntityInterface $entity){
+
+  // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
+  $user = \Drupal::currentUser();
+  // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
+  $has_user_special_roles = empty($user->getRoles(TRUE));
+
+  $entityinfo = array(
+    'resource_uuid' => $entity->uuid(),
+    'write_permissions' => ($has_user_special_roles ? 0 : 1)
+  );
+  return $entityinfo;
+}
+
+/**
+ * Extract information from study (?!) **node** entity.
+ * 
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ * @return Drupal\node\Entity\Node[]
+ */
+function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface $entity){
   $groupid = array();
   $groupuuid = array();
   $groupEmikatID = null;
@@ -124,10 +185,9 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
 /**
  * sets for each Study group the $entityInfo variable
  * Extract information from **group** entity.
- */
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
- * @return void
+ * @return Drupal\node\Entity\Node[]
  */
 function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
   // specify GroupType explicitly, since some fields might be unique to certain GroupTypes only
@@ -170,6 +230,9 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
 /**
  * Implements hook_entity_presave().
  * Needed currently for triggering Emikat once a Study is advanced enough or relevant information has changed
+ * 
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ * @return Drupal\node\Entity\Node[]
  */
 function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity) {
 
@@ -222,6 +285,9 @@ function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity
 
 }
 
+/**
+ * @param $node \Drupal\node\Entity\Node
+ */
 function csis_helpers_node_insert (\Drupal\node\Entity\Node $node) {
   // if a Report image is created -> add it as a group content depending on the referenced GL-step
   if ($node->bundle() == 'report_image' && !$node->get('field_source_step')->isEmpty()) {
