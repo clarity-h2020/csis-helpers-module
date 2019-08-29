@@ -68,7 +68,12 @@ function csis_js_alter(&$javascript, \Drupal\Core\Asset\AttachedAssetsInterface 
 }
 
 
-
+/**
+ * Extract information from **node** entity.
+ * 
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ * @return void
+ */
 function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
   $groupid = array();
   $groupuuid = array();
@@ -108,7 +113,7 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
     'study'=> (empty($groupid)? 0 : $groupid[0]),
     'study_uuid' => (empty($groupuuid)? 0 : $groupuuid[0]),
     'study_emikat_id' => $groupEmikatID,
-    'study_datapackage_uuid' => $datapackageUUID,
+    'datapackage_uuid' => $datapackageUUID,
     'study_area' => $groupArea,
     'eea_city_name' => $groupEeaName,
     'write_permissions' => ($has_user_special_roles ? 0 : 1)
@@ -117,7 +122,9 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
 }
 
 /**
- * sets for each Study group the $entityifno variable
+ * sets for each Study group the $entityInfo variable
+ * Extract information from **group** entity.
+ */
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return void
@@ -127,7 +134,7 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
   if ($entity->getGroupType()->id() == "study") {
     $datapackageUUID = null;
     $eeaName = null;
-    // Load the tdata package
+    // Load the data package
     $groupDatapackageID = $entity->get('field_data_package')->target_id;
     if ($groupDatapackageID) {
       $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
@@ -150,7 +157,7 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
       'study'=> $entity->id(),
       'study_uuid'=> $entity->uuid(),
       'study_emikat_id' => $entity->get('field_emikat_id')->value,
-      'study_datapackage_uuid' => $datapackageUUID,
+      'datapackage_uuid' => $datapackageUUID,
       'study_area' => $entity->get('field_area')->value,
       'eea_city_name' => $eeaName,
       'write_permissions' => ($has_user_special_roles ? 0 : 1)
