@@ -1,204 +1,212 @@
 <?php
-use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupContent;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
-use Drupal\Core\Access\AccessResult;
 use Drupal\taxonomy\Entity\Term;
 
-function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode){
-  $type = $entity->bundle();
+function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode)
+{
+    $type = $entity->bundle();
 
-  if ($type == ("gl_step" || "data_package" || "data_package_metadata") && $view_mode != "compact") {
-    // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
-    $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
-    
-    $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
-    $build['#attached']['library'][] = 'csis_helpers/include_in_report';
-    $build['#attached']['library'][] = 'csis_helpers/html2canvas';
-    $build['#attached']['library'][] = 'csis_helpers/seamless';
-    $build['#attached']['library'][] = 'csis_helpers/update_step_relations';
+    if ($type == ("gl_step" || "data_package" || "data_package_metadata") && $view_mode != "compact") {
+        // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
+        $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
 
-    switch ( $type) {
-      case 'gl_step': $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_node_entity_info($entity);
-      case 'data_package': $build['#attached']['drupalSettings']['csisHelpers']['datapackageInfo'] = csis_helpers_node_entity_info($entity);
-      case 'data_package_metadata': $build['#attached']['drupalSettings']['csisHelpers']['resourceInfo'] = csis_helpers_node_entity_info($entity);
-      default: $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_node_entity_info($entity);
+        $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
+        $build['#attached']['library'][] = 'csis_helpers/include_in_report';
+        $build['#attached']['library'][] = 'csis_helpers/html2canvas';
+        $build['#attached']['library'][] = 'csis_helpers/seamless';
+        $build['#attached']['library'][] = 'csis_helpers/update_step_relations';
+
+        switch ($type) {
+            case 'gl_step':$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_node_entity_info($entity);
+            case 'data_package':$build['#attached']['drupalSettings']['csisHelpers']['datapackageInfo'] = csis_helpers_node_entity_info($entity);
+            case 'data_package_metadata':$build['#attached']['drupalSettings']['csisHelpers']['resourceInfo'] = csis_helpers_node_entity_info($entity);
+            default:$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_node_entity_info($entity);
+        }
     }
-  }
 }
 
-function csis_helpers_group_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode){
-   // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
-  $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($entity);
-  $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
+function csis_helpers_group_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode)
+{
+    // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
+    $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($entity);
+    $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
 
-  $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_group_entity_info($entity);
+    $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_group_entity_info($entity);
 }
 
-function csis_helpers_form_node_form_alter (&$form, $form_state, $form_id){
-  //attach node-id and if group node group-id to drupalSettings
+function csis_helpers_form_node_form_alter(&$form, $form_state, $form_id)
+{
+    //attach node-id and if group node group-id to drupalSettings
 
-  $entity = $form_state->GetFormObject()->getEntity();
-  if($entity->id()){
-    $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
-  }
+    $entity = $form_state->GetFormObject()->getEntity();
+    if ($entity->id()) {
+        $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
+    }
 }
 
-function csis_helpers_form_group_form_alter (&$form, $form_state, $form_id){
-  //attach group node grout-id to drupalSettings
-  $entity = $form_state->GetFormObject()->getEntity();
-  if($entity->id()){
-   $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($entity);
-   $form['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
+function csis_helpers_form_group_form_alter(&$form, $form_state, $form_id)
+{
+    //attach group node grout-id to drupalSettings
+    $entity = $form_state->GetFormObject()->getEntity();
+    if ($entity->id()) {
+        $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($entity);
+        $form['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
 
-  }
+    }
 
-  // hide Delete-button for Studies everywhere except for the default Edit-form
-  if ($entity->bundle() == "study" && $form['form_id']['#value'] != "group_study_edit_form") {
-    $form['actions']['delete']['#access'] = false;
-  }
+    // hide Delete-button for Studies everywhere except for the default Edit-form
+    if ($entity->bundle() == "study" && $form['form_id']['#value'] != "group_study_edit_form") {
+        $form['actions']['delete']['#access'] = false;
+    }
 }
 
-function csis_helpers_preprocess_views_view(&$variables) {
+function csis_helpers_preprocess_views_view(&$variables)
+{
 
-  $view = $variables['view'];
-  //\Drupal::logger('csis helpers')->notice($view->id());
-  if ($view->id() == 'data_packages' && $view->current_display == 'browser'){
-     $variables['#attached']['library'][] = 'csis_helpers/entitybrowser_helpers';
-     $variables['#attached']['library'][] = 'csis_helpers/entitybrowser_reorder';
-  }
+    $view = $variables['view'];
+    //\Drupal::logger('csis helpers')->notice($view->id());
+    if ($view->id() == 'data_packages' && $view->current_display == 'browser') {
+        $variables['#attached']['library'][] = 'csis_helpers/entitybrowser_helpers';
+        $variables['#attached']['library'][] = 'csis_helpers/entitybrowser_reorder';
+    }
 
-  $variables['#attached']['library'][] = 'csis_helpers/stepdata_helpers';
-  $variables['#attached']['library'][] = 'bootstrap/drupal.vertical-tabs';
+    $variables['#attached']['library'][] = 'csis_helpers/stepdata_helpers';
+    $variables['#attached']['library'][] = 'bootstrap/drupal.vertical-tabs';
 
-  $variables['#attached']['library'][] = 'csis_helpers/progress_indicator';
+    $variables['#attached']['library'][] = 'csis_helpers/progress_indicator';
 }
 
-function csis_js_alter(&$javascript, \Drupal\Core\Asset\AttachedAssetsInterface $assets){
- // kint($javascript);
+function csis_js_alter(&$javascript, \Drupal\Core\Asset\AttachedAssetsInterface $assets)
+{
+    // kint($javascript);
 }
 
 /**
  * Extract information from **node** entity.
- * 
+ *
  * Attention: data_package_metadata is the machine name of Data Package **Resource**!
- * 
+ *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Drupal\node\Entity\Node[]
  */
-function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
-  // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
-  $user = \Drupal::currentUser();
-  // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
-  $has_user_special_roles = empty($user->getRoles(TRUE));
+function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $entity)
+{
+    // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
+    $user = \Drupal::currentUser();
+    // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
+    $has_user_special_roles = empty($user->getRoles(true));
 
- $entityinfo = array(
-  'id' => $entity->id(),
-  'uuid' => $entity->uuid(),
-   //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group! title? label? name? 
-   //'name' => $entity->get('field_name')->value, // inconsistency: no name field in resource, name field in data package used for 'ckan_id'
-  'write_permissions' => ($has_user_special_roles ? 0 : 1)
-);
+    $entityinfo = array(
+        'id' => $entity->id(),
+        'uuid' => $entity->uuid(),
+        //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group! title? label? name?
+        //'name' => $entity->get('field_name')->value, // inconsistency: no name field in resource, name field in data package used for 'ckan_id'
+        'write_permissions' => ($has_user_special_roles ? 0 : 1),
+    );
 
-$type = $entity->bundle();
- 
- switch ( $type) {
-  case 'gl_step': return array_merge($entityinfo , csis_helpers_node_entity_info_study($entity));
-  case 'data_package': return array_merge($entityinfo , csis_helpers_node_entity_info_datapackage($entity));
-  case 'data_package_metadata': return array_merge($entityinfo , csis_helpers_node_entity_info_resource($entity));
-  default: return array_merge($entityinfo , csis_helpers_node_entity_info_study($entity));
- }
+    $type = $entity->bundle();
+
+    switch ($type) {
+        case 'gl_step':return array_merge($entityinfo, csis_helpers_node_entity_info_study($entity));
+        case 'data_package':return array_merge($entityinfo, csis_helpers_node_entity_info_datapackage($entity));
+        case 'data_package_metadata':return array_merge($entityinfo, csis_helpers_node_entity_info_resource($entity));
+        default:return array_merge($entityinfo, csis_helpers_node_entity_info_study($entity));
+    }
 }
 
 /**
  * Extract information from **Data Package** entity.
- * 
+ *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Drupal\node\Entity\Node[]
  */
-function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInterface $entity){
-  $entityinfo = array(
-    'name' => $entity->get('title')->value,
-    'spatial_extent' => $entity->get('field_spatial_extent')->value
-  );
-  return $entityinfo;
+function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInterface $entity)
+{
+    $entityinfo = array(
+        'name' => $entity->get('title')->value,
+        'spatial_extent' => $entity->get('field_spatial_extent')->value,
+    );
+    return $entityinfo;
 }
 
 /**
  * Extract information from DATA PACKAGES' RESOURCE entity.
- * 
+ *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Drupal\node\Entity\Node[]
  */
-function csis_helpers_node_entity_info_resource(\Drupal\Core\Entity\EntityInterface $entity){
+function csis_helpers_node_entity_info_resource(\Drupal\Core\Entity\EntityInterface $entity)
+{
 
-  $entityinfo = array(
-    'name' => $entity->get('title')->value,
-    'spatial_extent' => $entity->get('field_spatial_extent')->value
-  );
-  return $entityinfo;
+    $entityinfo = array(
+        'name' => $entity->get('title')->value,
+        'spatial_extent' => $entity->get('field_spatial_extent')->value,
+    );
+    return $entityinfo;
 }
 
 /**
  * Extract information from STUDY's GL_STEP **node** entity.
- * 
+ *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Drupal\node\Entity\Node[]
  */
-function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface $entity){
-  $groupid = array();
-  $groupuuid = array();
-  $groupEmikatID = null;
-  $datapackageUUID = null;
-  $groupArea = null;
-  $groupEaaName = null;
-  $relations = GroupContent::loadByEntity($entity);
+function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface $entity)
+{
+    $groupid = array();
+    $groupuuid = array();
+    $groupEmikatID = null;
+    $datapackageUUID = null;
+    $groupArea = null;
+    $groupEaaName = null;
+    $relations = GroupContent::loadByEntity($entity);
 
-  foreach ( $relations as $relation) {
-    $groupid[] = $relation->getGroup()->id();
-    $groupuuid[] = $relation->getGroup()->uuid();
-    $groupEmikatID = $relation->getGroup()->get('field_emikat_id')->value;
-    $groupEmikatID = empty($groupEmikatID) ? -1 : intval($groupEmikatID);
-    $groupName = $relation->getGroup()->get('field_name')->value;
-    $groupDatapackageID = $relation->getGroup()->get('field_data_package')->target_id;
-    $groupArea = $relation->getGroup()->get('field_area')->value;
-    $groupCityTerm = (!$relation->getGroup()->get('field_city_region')->isEmpty() ? Term::load($relation->getGroup()->get('field_city_region')->target_id) : false);
+    foreach ($relations as $relation) {
+        $groupid[] = $relation->getGroup()->id();
+        $groupuuid[] = $relation->getGroup()->uuid();
+        $groupEmikatID = $relation->getGroup()->get('field_emikat_id')->value;
+        $groupEmikatID = empty($groupEmikatID) ? -1 : intval($groupEmikatID);
+        $groupName = $relation->getGroup()->get('field_name')->value;
+        $groupDatapackageID = $relation->getGroup()->get('field_data_package')->target_id;
+        $groupArea = $relation->getGroup()->get('field_area')->value;
+        $groupCityTerm = (!$relation->getGroup()->get('field_city_region')->isEmpty() ? Term::load($relation->getGroup()->get('field_city_region')->target_id) : false);
 
-    if ($groupDatapackageID) {
-      $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
-      $datapackageUUID = $datapackageNode->uuid();
+        if ($groupDatapackageID) {
+            $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
+            $datapackageUUID = $datapackageNode->uuid();
+        }
+
+        if ($groupCityTerm) {
+            $groupEeaName = $groupCityTerm->get('field_eea_city_profile_name')->value;
+        }
+
     }
 
-    if ($groupCityTerm) {
-      $groupEeaName = $groupCityTerm->get('field_eea_city_profile_name')->value;
-    }
+    // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
+    $user = \Drupal::currentUser();
+    // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
+    $has_user_special_roles = empty($user->getRoles(true));
 
-  }
-
-  // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
-  $user = \Drupal::currentUser();
-  // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
-  $has_user_special_roles = empty($user->getRoles(TRUE));
-
-
-  $entityinfo = array(
-    'name' => $groupName,
-    'step'=> $entity->id(),
-    'step_uuid' => $entity->uuid(),
-    'study'=> (empty($groupid)? -1 : $groupid[0]), //deprecated -> use  entitiyinfo.study.id
-    'study_uuid' => (empty($groupuuid)? -1 : $groupuuid[0]), //deprecated -> use  entitiyinfo.study.uuid
-    'id'=> (empty($groupid)? -1 : $groupid[0]), //overwrites $entityinfo.id from csis_helpers_node_entity_info
-    'uuid'=> (empty($groupuuid)? -1 : $groupuuid[0]), //overwrites $entityinfo.uuid from csis_helpers_node_entity_info
-    'study_emikat_id' => $groupEmikatID,
-    'study_datapackage_uuid' => $datapackageUUID,
-    'study_area' => $groupArea,
-    'eea_city_name' => $groupEeaName,
-    'write_permissions' => ($has_user_special_roles ? 0 : 1)
-  );
-  return $entityinfo;
+    $entityinfo = array(
+        'name' => $groupName,
+        'step' => $entity->id(),
+        'step_uuid' => $entity->uuid(),
+        'study' => (empty($groupid) ? -1 : $groupid[0]), //deprecated -> use  entitiyinfo.study.id
+        'study_uuid' => (empty($groupuuid) ? -1 : $groupuuid[0]), //deprecated -> use  entitiyinfo.study.uuid
+        'id' => (empty($groupid) ? -1 : $groupid[0]), //overwrites $entityinfo.id from csis_helpers_node_entity_info
+        'uuid' => (empty($groupuuid) ? -1 : $groupuuid[0]), //overwrites $entityinfo.uuid from csis_helpers_node_entity_info
+        'study_emikat_id' => $groupEmikatID,
+        'study_datapackage_uuid' => $datapackageUUID,
+        'study_area' => $groupArea,
+        'eea_city_name' => $groupEeaName,
+        'write_permissions' => ($has_user_special_roles ? 0 : 1),
+    );
+    return $entityinfo;
 }
 
 /**
@@ -208,137 +216,139 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Drupal\node\Entity\Node[]
  */
-function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
-  // specify GroupType explicitly, since some fields might be unique to certain GroupTypes only
-  if ($entity->getGroupType()->id() == "study") {
-    $datapackageUUID = null;
-    $eeaName = null;
-    // Load the data package
-    $groupDatapackageID = $entity->get('field_data_package')->target_id;
-    if ($groupDatapackageID) {
-      $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
-      $datapackageUUID = $datapackageNode->uuid();
-    }
+function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $entity)
+{
+    // specify GroupType explicitly, since some fields might be unique to certain GroupTypes only
+    if ($entity->getGroupType()->id() == "study") {
+        $datapackageUUID = null;
+        $eeaName = null;
+        // Load the data package
+        $groupDatapackageID = $entity->get('field_data_package')->target_id;
+        if ($groupDatapackageID) {
+            $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
+            $datapackageUUID = $datapackageNode->uuid();
+        }
 
-    // load city term, if is has already been set in the Study
-    $cityTerm = (!$entity->get('field_city_region')->isEmpty() ? Term::load($entity->get('field_city_region')->target_id): false);
-    if ($cityTerm) {
-      $eeaName = $cityTerm->get('field_eea_city_profile_name')->value;
-    }
-    // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
-    $user = \Drupal::currentUser();
-    // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
-    $has_user_special_roles = empty($user->getRoles(TRUE));
-    $emikatId = $entity->get('field_emikat_id')->value;
-    $emikatId = empty($emikatId) ? -1 : intval($emikatId);
+        // load city term, if is has already been set in the Study
+        $cityTerm = (!$entity->get('field_city_region')->isEmpty() ? Term::load($entity->get('field_city_region')->target_id) : false);
+        if ($cityTerm) {
+            $eeaName = $cityTerm->get('field_eea_city_profile_name')->value;
+        }
+        // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
+        $user = \Drupal::currentUser();
+        // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
+        $has_user_special_roles = empty($user->getRoles(true));
+        $emikatId = $entity->get('field_emikat_id')->value;
+        $emikatId = empty($emikatId) ? -1 : intval($emikatId);
 
-    $entityinfo = array(
-      //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group!
-      'step'=> -1,
-      'step_uuid' => -1,
-      'id'=> $entity->id(),
-      'uuid'=> $entity->uuid(),
-      'study'=> $entity->id(), //deprecated -> use  entitiyinfo.study.id
-      'study_uuid'=> $entity->uuid(), //deprecated -> use  entitiyinfo.study.uuid
-      'study_emikat_id' => $emikatId,
-      'study_datapackage_uuid' => $datapackageUUID,
-      'study_area' => $entity->get('field_area')->value,
-      'eea_city_name' => $eeaName,
-      'write_permissions' => ($has_user_special_roles ? 0 : 1)
-      
-    );
-    return $entityinfo;
-  }
+        $entityinfo = array(
+            //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group!
+            'step' => -1,
+            'step_uuid' => -1,
+            'id' => $entity->id(),
+            'uuid' => $entity->uuid(),
+            'study' => $entity->id(), //deprecated -> use  entitiyinfo.study.id
+            'study_uuid' => $entity->uuid(), //deprecated -> use  entitiyinfo.study.uuid
+            'study_emikat_id' => $emikatId,
+            'study_datapackage_uuid' => $datapackageUUID,
+            'study_area' => $entity->get('field_area')->value,
+            'eea_city_name' => $eeaName,
+            'write_permissions' => ($has_user_special_roles ? 0 : 1),
+
+        );
+        return $entityinfo;
+    }
 }
-
 
 /**
  * Implements hook_entity_presave().
  * Needed currently for triggering Emikat once a Study is advanced enough or relevant information has changed
- * 
+ *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Drupal\node\Entity\Node[]
  */
-function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity) {
+function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity)
+{
 
-  // triggering Emikat only needed for Studies (additionally: don't trigger it in a local environment)
-  if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() != "http://localhost:8080") {
-    /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
-    $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
+    // triggering Emikat only needed for Studies (additionally: don't trigger it in a local environment)
+    if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() != "http://localhost:8080") {
+        /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
+        $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
 
-    // check if Study contains all relevant information for Emikat and if they were changed
-    try {
-      $trigger = $emikatService->checkStudyChanges($entity);
-      if ($trigger) {
-        // changes are relevant -> notify Emikat
-        $result = $emikatService->triggerEmikat($entity);
+        // check if Study contains all relevant information for Emikat and if they were changed
+        try {
+            $trigger = $emikatService->checkStudyChanges($entity);
+            if ($trigger) {
+                // changes are relevant -> notify Emikat
+                $result = $emikatService->triggerEmikat($entity);
 
-        if ($result) {
-          \Drupal::logger('csis_helpers')->notice(
-            "Emikat was notified about change in Study %id",
-            array(
-              '%id' => $entity->id(),
-            )
-          );
-        } else {
-          //remove this after testing
-          \Drupal::logger('csis_helpers')->notice(
-            "Emikat not notified about change in Study %id due to error in process (see log files about 'EmikatHelperFunctions')",
-            array(
-              '%id' => $entity->id(),
-            )
-          );
+                if ($result) {
+                    \Drupal::logger('csis_helpers')->notice(
+                        "Emikat was notified about change in Study %id",
+                        array(
+                            '%id' => $entity->id(),
+                        )
+                    );
+                } else {
+                    //remove this after testing
+                    \Drupal::logger('csis_helpers')->notice(
+                        "Emikat not notified about change in Study %id due to error in process (see log files about 'EmikatHelperFunctions')",
+                        array(
+                            '%id' => $entity->id(),
+                        )
+                    );
+                }
+            } else {
+                // \Drupal::logger('csis_helpers')->notice(
+                //   "Emikat not triggered (trigger == false) about change in Study %id",
+                //   array(
+                //     '%id' => $entity->id(),
+                //   )
+                // );
+            }
+
+        } catch (Exception $e) {
+            \Drupal::logger('csis_helpers')->error(
+                "Study-Request to Emikat failed due to an error: %error",
+                array(
+                    '%error' => $e->getMessage(),
+                )
+            );
         }
-      } else {
-        // \Drupal::logger('csis_helpers')->notice(
-        //   "Emikat not triggered (trigger == false) about change in Study %id",
-        //   array(
-        //     '%id' => $entity->id(),
-        //   )
-        // );
-      }
-
-    } catch (Exception $e) {
-      \Drupal::logger('csis_helpers')->error(
-        "Study-Request to Emikat failed due to an error: %error",
-        array(
-          '%error' => $e->getMessage(),
-        )
-      );
     }
-  }
 
 }
 
 /**
  * @param $node \Drupal\node\Entity\Node
  */
-function csis_helpers_node_insert (\Drupal\node\Entity\Node $node) {
-  // if a Report image is created -> add it as a group content depending on the referenced GL-step
-  if ($node->bundle() == 'report_image' && !$node->get('field_source_step')->isEmpty()) {
-    // get GL-step (which is already part of the Group)
-    $source_step_id = $node->get("field_source_step")->first()->getValue()['target_id'];
-    $gl_node = Node::load($source_step_id);
+function csis_helpers_node_insert(\Drupal\node\Entity\Node $node)
+{
+    // if a Report image is created -> add it as a group content depending on the referenced GL-step
+    if ($node->bundle() == 'report_image' && !$node->get('field_source_step')->isEmpty()) {
+        // get GL-step (which is already part of the Group)
+        $source_step_id = $node->get("field_source_step")->first()->getValue()['target_id'];
+        $gl_node = Node::load($source_step_id);
 
-    $plugin_id = 'group_node:' . $node->bundle();
+        $plugin_id = 'group_node:' . $node->bundle();
 
-    // if GL-step exists -> load the corresponding group content and retrieve the group id
-    if ($gl_node) {
-      $group_id = -1;
+        // if GL-step exists -> load the corresponding group content and retrieve the group id
+        if ($gl_node) {
+            $group_id = -1;
 
-      $group_contents = GroupContent::loadByEntity($gl_node);
-      foreach ($group_contents as $group_content) {
-        $group_id = $group_content->getGroup()->id();
-      }
+            $group_contents = GroupContent::loadByEntity($gl_node);
+            foreach ($group_contents as $group_content) {
+                $group_id = $group_content->getGroup()->id();
+            }
 
-      $group = Group::load($group_id);
+            $group = Group::load($group_id);
 
-      // if group exists -> add report image as group content to that group
-      if($group) {
-        $group->addContent($node,$plugin_id);
-      }
+            // if group exists -> add report image as group content to that group
+            if ($group) {
+                $group->addContent($node, $plugin_id);
+            }
+        }
     }
-  }
 }
 
 /**
@@ -347,7 +357,7 @@ function csis_helpers_node_insert (\Drupal\node\Entity\Node $node) {
  */
 function csis_helpers_jsonapi_entity_filter_access(\Drupal\Core\Entity\EntityTypeInterface $entity_type, \Drupal\Core\Session\AccountInterface $account)
 {
-  return ([
-    JSONAPI_FILTER_AMONG_ALL => AccessResult::allowed()
-  ]);
+    return ([
+        JSONAPI_FILTER_AMONG_ALL => AccessResult::allowed(),
+    ]);
 }
