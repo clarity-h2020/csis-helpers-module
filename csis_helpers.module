@@ -9,13 +9,23 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\taxonomy\Entity\Term;
 
 function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode){
-  if ($entity->bundle() == ("gl_step" || "data_package" || "data_package_metadata") && $view_mode != "compact") {
+  $type = $entity->bundle();
+
+  if ($typ == ("gl_step" || "data_package" || "data_package_metadata") && $view_mode != "compact") {
+    // DEPRECATED: use entityinfo.study/datapackage/resource instead!
     $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
+    
     $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
     $build['#attached']['library'][] = 'csis_helpers/include_in_report';
     $build['#attached']['library'][] = 'csis_helpers/html2canvas';
     $build['#attached']['library'][] = 'csis_helpers/seamless';
     $build['#attached']['library'][] = 'csis_helpers/update_step_relations';
+
+    switch ( $type) {
+      case 'gl_step': $build['#attached']['drupalSettings']['csisHelpers']['entityinfo']['study'] = csis_helpers_node_entity_info($entity);
+      case 'data_package': $build['#attached']['drupalSettings']['csisHelpers']['entityinfo']['datapackage'] = csis_helpers_node_entity_info($entity);
+      case 'data_package_metadata': $build['#attached']['drupalSettings']['csisHelpers']['entityinfo']['resource'] = csis_helpers_node_entity_info($entity);
+    }
   }
 }
 
@@ -76,55 +86,52 @@ function csis_js_alter(&$javascript, \Drupal\Core\Asset\AttachedAssetsInterface 
  * @return Drupal\node\Entity\Node[]
  */
 function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $entity){
-  $type = $entity->bundle();
- switch ( $type) {
-  case 'gl_step': return csis_helpers_node_entity_info_study($entity);
-  case 'data_package': return csis_helpers_node_entity_info_datapackage($entity);
-  case 'data_package_metadata': return csis_helpers_node_entity_info_resource($entity);
-  default: return csis_helpers_node_entity_info_study($entity);
- }
-}
-
-/**
- * Extract information from study (?!) **node** entity.
- * 
- * @param \Drupal\Core\Entity\EntityInterface $entity
- * @return Drupal\node\Entity\Node[]
- */
-function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInterface $entity){
-
   // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
   $user = \Drupal::currentUser();
   // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
   $has_user_special_roles = empty($user->getRoles(TRUE));
 
+ $entityinfo = array(
+  'id' => $entity->uuid(),
+  'uuid' => $entity->uuid(),
+   //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group!
+  'name' => $entity->get('field_name')->value,
+  'write_permissions' => ($has_user_special_roles ? 0 : 1)
+);
+
+$type = $entity->bundle();
+ 
+ switch ( $type) {
+  case 'gl_step': return array_merge($entityinfo , csis_helpers_node_entity_info_study($entity));
+  case 'data_package': return array_merge($entityinfo , csis_helpers_node_entity_info_datapackage($entity));
+  case 'data_package_metadata': return array_merge($entityinfo , csis_helpers_node_entity_info_resource($entity));
+  default: return array_merge($entityinfo , csis_helpers_node_entity_info_study($entity));
+ }
+}
+
+/**
+ * Extract information from **Data Package** entity.
+ * 
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ * @return Drupal\node\Entity\Node[]
+ */
+function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInterface $entity){
   $entityinfo = array(
-    'uuid' => $entity->uuid(),
-    'type' => $entity->getEntityType()->getLabel(), 
     'label' => $entity->label(), //Drupal WTF? why label() and not getLabel() ?!
-    'title' => $entity->get('title')->value,
-    'datapackage_uuid' => $entity->uuid(),
-    'write_permissions' => ($has_user_special_roles ? 0 : 1)
   );
   return $entityinfo;
 }
 
 /**
- * Extract information from study (?!) **node** entity.
+ * Extract information from study's gl_step **node** entity.
  * 
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Drupal\node\Entity\Node[]
  */
 function csis_helpers_node_entity_info_resource(\Drupal\Core\Entity\EntityInterface $entity){
 
-  // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
-  $user = \Drupal::currentUser();
-  // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
-  $has_user_special_roles = empty($user->getRoles(TRUE));
-
   $entityinfo = array(
-    'resource_uuid' => $entity->uuid(),
-    'write_permissions' => ($has_user_special_roles ? 0 : 1)
+    'resource_uuid' => $entity->uuid()
   );
   return $entityinfo;
 }
@@ -148,6 +155,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     $groupid[] = $relation->getGroup()->id();
     $groupuuid[] = $relation->getGroup()->uuid();
     $groupEmikatID = $relation->getGroup()->get('field_emikat_id')->value;
+    $groupEmikatID = empty($groupEmikatID) ? -1 : intval($groupEmikatID);
     $groupDatapackageID = $relation->getGroup()->get('field_data_package')->target_id;
     $groupArea = $relation->getGroup()->get('field_area')->value;
     $groupCityTerm = (!$relation->getGroup()->get('field_city_region')->isEmpty() ? Term::load($relation->getGroup()->get('field_city_region')->target_id) : false);
@@ -168,11 +176,14 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
   // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
   $has_user_special_roles = empty($user->getRoles(TRUE));
 
+
   $entityinfo = array(
     'step'=> $entity->id(),
     'step_uuid' => $entity->uuid(),
-    'study'=> (empty($groupid)? 0 : $groupid[0]),
-    'study_uuid' => (empty($groupuuid)? 0 : $groupuuid[0]),
+    'study'=> (empty($groupid)? -1 : $groupid[0]), //deprecated -> use  entitiyinfo.study.id
+    'study_uuid' => (empty($groupuuid)? -1 : $groupuuid[0]), //deprecated -> use  entitiyinfo.study.uuid
+    'id'=> (empty($groupid)? -1 : $groupid[0]), //overwrites $entityinfo.id from csis_helpers_node_entity_info
+    'uuid'=> (empty($groupuuid)? -1 : $groupuuid[0]), //overwrites $entityinfo.uuid from csis_helpers_node_entity_info
     'study_emikat_id' => $groupEmikatID,
     'datapackage_uuid' => $datapackageUUID,
     'study_area' => $groupArea,
@@ -210,17 +221,23 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
     $user = \Drupal::currentUser();
     // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
     $has_user_special_roles = empty($user->getRoles(TRUE));
+    $emikatId = $entity->get('field_emikat_id')->value;
+    $emikatId = empty($emikatId) ? -1 : intval($emikatId);
 
     $entityinfo = array(
-      'step'=> null,
-      'step_uuid' => null,
-      'study'=> $entity->id(),
-      'study_uuid'=> $entity->uuid(),
-      'study_emikat_id' => $entity->get('field_emikat_id')->value,
-      'datapackage_uuid' => $datapackageUUID,
+      //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group!
+      'step'=> -1,
+      'step_uuid' => -1,
+      'id'=> $entity->id(),
+      'uuid'=> $entity->uuid(),
+      'study'=> $entity->id(), //deprecated -> use  entitiyinfo.study.id
+      'study_uuid'=> $entity->uuid(), //deprecated -> use  entitiyinfo.study.uuid
+      'study_emikat_id' => $emikatId,
+      'study_datapackage_uuid' => $datapackageUUID,
       'study_area' => $entity->get('field_area')->value,
       'eea_city_name' => $eeaName,
       'write_permissions' => ($has_user_special_roles ? 0 : 1)
+      
     );
     return $entityinfo;
   }
