@@ -11,8 +11,8 @@ use Drupal\taxonomy\Entity\Term;
 function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode){
   $type = $entity->bundle();
 
-  if ($typ == ("gl_step" || "data_package" || "data_package_metadata") && $view_mode != "compact") {
-    // DEPRECATED: use entityinfo.study/datapackage/resource instead!
+  if ($type == ("gl_step" || "data_package" || "data_package_metadata") && $view_mode != "compact") {
+    // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
     $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
     
     $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
@@ -22,16 +22,20 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
     $build['#attached']['library'][] = 'csis_helpers/update_step_relations';
 
     switch ( $type) {
-      case 'gl_step': $build['#attached']['drupalSettings']['csisHelpers']['entityinfo']['study'] = csis_helpers_node_entity_info($entity);
-      case 'data_package': $build['#attached']['drupalSettings']['csisHelpers']['entityinfo']['datapackage'] = csis_helpers_node_entity_info($entity);
-      case 'data_package_metadata': $build['#attached']['drupalSettings']['csisHelpers']['entityinfo']['resource'] = csis_helpers_node_entity_info($entity);
+      case 'gl_step': $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_node_entity_info($entity);
+      case 'data_package': $build['#attached']['drupalSettings']['csisHelpers']['datapackageInfo'] = csis_helpers_node_entity_info($entity);
+      case 'data_package_metadata': $build['#attached']['drupalSettings']['csisHelpers']['resourceInfo'] = csis_helpers_node_entity_info($entity);
+      default: $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_node_entity_info($entity);
     }
   }
 }
 
 function csis_helpers_group_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode){
+   // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
   $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($entity);
   $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
+
+  $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_group_entity_info($entity);
 }
 
 function csis_helpers_form_node_form_alter (&$form, $form_state, $form_id){
@@ -92,10 +96,10 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
   $has_user_special_roles = empty($user->getRoles(TRUE));
 
  $entityinfo = array(
-  'id' => $entity->uuid(),
+  'id' => $entity->id(),
   'uuid' => $entity->uuid(),
-   //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group!
-  'name' => $entity->get('field_name')->value,
+   //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group! title? label? name? 
+   //'name' => $entity->get('field_name')->value, // inconsistency: no name field in resource, name field in data package used for 'ckan_id'
   'write_permissions' => ($has_user_special_roles ? 0 : 1)
 );
 
@@ -117,13 +121,14 @@ $type = $entity->bundle();
  */
 function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInterface $entity){
   $entityinfo = array(
-    'label' => $entity->label(), //Drupal WTF? why label() and not getLabel() ?!
+    'name' => $entity->get('title')->value,
+    'spatial_extent' => $entity->get('field_spatial_extent')->value
   );
   return $entityinfo;
 }
 
 /**
- * Extract information from study's gl_step **node** entity.
+ * Extract information from DATA PACKAGES' RESOURCE entity.
  * 
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Drupal\node\Entity\Node[]
@@ -131,13 +136,14 @@ function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInt
 function csis_helpers_node_entity_info_resource(\Drupal\Core\Entity\EntityInterface $entity){
 
   $entityinfo = array(
-    'resource_uuid' => $entity->uuid()
+    'name' => $entity->get('title')->value,
+    'spatial_extent' => $entity->get('field_spatial_extent')->value
   );
   return $entityinfo;
 }
 
 /**
- * Extract information from study (?!) **node** entity.
+ * Extract information from STUDY's GL_STEP **node** entity.
  * 
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Drupal\node\Entity\Node[]
@@ -156,6 +162,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     $groupuuid[] = $relation->getGroup()->uuid();
     $groupEmikatID = $relation->getGroup()->get('field_emikat_id')->value;
     $groupEmikatID = empty($groupEmikatID) ? -1 : intval($groupEmikatID);
+    $groupName = $relation->getGroup()->get('field_name')->value;
     $groupDatapackageID = $relation->getGroup()->get('field_data_package')->target_id;
     $groupArea = $relation->getGroup()->get('field_area')->value;
     $groupCityTerm = (!$relation->getGroup()->get('field_city_region')->isEmpty() ? Term::load($relation->getGroup()->get('field_city_region')->target_id) : false);
@@ -178,6 +185,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
 
 
   $entityinfo = array(
+    'name' => $groupName,
     'step'=> $entity->id(),
     'step_uuid' => $entity->uuid(),
     'study'=> (empty($groupid)? -1 : $groupid[0]), //deprecated -> use  entitiyinfo.study.id
@@ -185,7 +193,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     'id'=> (empty($groupid)? -1 : $groupid[0]), //overwrites $entityinfo.id from csis_helpers_node_entity_info
     'uuid'=> (empty($groupuuid)? -1 : $groupuuid[0]), //overwrites $entityinfo.uuid from csis_helpers_node_entity_info
     'study_emikat_id' => $groupEmikatID,
-    'datapackage_uuid' => $datapackageUUID,
+    'study_datapackage_uuid' => $datapackageUUID,
     'study_area' => $groupArea,
     'eea_city_name' => $groupEeaName,
     'write_permissions' => ($has_user_special_roles ? 0 : 1)
@@ -195,7 +203,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
 
 /**
  * sets for each Study group the $entityInfo variable
- * Extract information from **group** entity.
+ * Extract information from STUDY **GROUP** entity.
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Drupal\node\Entity\Node[]
