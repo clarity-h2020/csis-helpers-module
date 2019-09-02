@@ -103,7 +103,7 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
     // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
     $has_user_special_roles = empty($user->getRoles(true));
 
-    $entityinfo = array(
+    $nodeEntityInfo = array(
         'id' => $entity->id(),
         'uuid' => $entity->uuid(),
         //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group! title? label? name?
@@ -114,11 +114,13 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
     $type = $entity->bundle();
 
     switch ($type) {
-        case 'gl_step':return array_merge($entityinfo, csis_helpers_node_entity_info_study($entity));
-        case 'data_package':return array_merge($entityinfo, csis_helpers_node_entity_info_datapackage($entity));
-        case 'data_package_metadata':return array_merge($entityinfo, csis_helpers_node_entity_info_resource($entity));
-            //default:return array_merge($entityinfo, csis_helpers_node_entity_info_study($entity));
+        case 'gl_step':return array_merge($nodeEntityInfo, csis_helpers_node_entity_info_study($entity));
+        case 'data_package':return array_merge($nodeEntityInfo, csis_helpers_node_entity_info_datapackage($entity));
+        case 'data_package_metadata':return array_merge($nodeEntityInfo, csis_helpers_node_entity_info_resource($entity));
+            //default:return array_merge($nodeEntityInfo, csis_helpers_node_entity_info_study($entity));
     }
+
+    return $nodeEntityInfo;
 }
 
 /**
@@ -129,7 +131,7 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
  */
 function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInterface $entity)
 {
-    $entityinfo = array(
+    $datapackageEntityInfo = array(
         'name' => $entity->get('title')->value,
     );
 
@@ -145,9 +147,9 @@ function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInt
             'miny' => $spatial_extend[0]->get('miny')->value,
         );
 
-        return array_merge($entityinfo, $spatialExtent);
+        return array_merge($datapackageEntityInfo, $spatialExtent);
     } else {
-        return $entityinfo;
+        return $datapackageEntityInfo;
     }
 }
 
@@ -159,7 +161,7 @@ function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInt
  */
 function csis_helpers_node_entity_info_resource(\Drupal\Core\Entity\EntityInterface $entity)
 {
-    $entityinfo = array(
+    $resourcEntityInfo = array(
         'name' => $entity->get('title')->value,
     );
 
@@ -175,9 +177,9 @@ function csis_helpers_node_entity_info_resource(\Drupal\Core\Entity\EntityInterf
             'miny' => $spatial_extend[0]->get('miny')->value,
         );
 
-        return array_merge($entityinfo, $spatialExtent);
+        return array_merge($resourcEntityInfo, $spatialExtent);
     } else {
-        return $entityinfo;
+        return $resourcEntityInfo;
     }
 }
 
@@ -223,7 +225,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
     $has_user_special_roles = empty($user->getRoles(true));
 
-    $entityinfo = array(
+    $studyEntityInfo = array(
         'name' => $groupName,
         'step' => $entity->id(),
         'step_uuid' => $entity->uuid(),
@@ -237,7 +239,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
         'eea_city_name' => $groupEeaName,
         'write_permissions' => ($has_user_special_roles ? 0 : 1),
     );
-    return $entityinfo;
+    return $studyEntityInfo;
 }
 
 /**
@@ -272,7 +274,7 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
         $emikatId = $entity->get('field_emikat_id')->value;
         $emikatId = empty($emikatId) ? -1 : intval($emikatId);
 
-        $entityinfo = array(
+        $groupEntityInfo = array(
             //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group!
             'step' => -1,
             'step_uuid' => -1,
@@ -287,7 +289,7 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
             'write_permissions' => ($has_user_special_roles ? 0 : 1),
 
         );
-        return $entityinfo;
+        return $groupEntityInfo;
     }
 }
 
