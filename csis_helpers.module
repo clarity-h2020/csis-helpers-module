@@ -11,11 +11,9 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
 {
     $type = $entity->bundle();
 
-    if ($type == ("gl_step" || "data_package" || "data_package_metadata") && $view_mode != "compact") {
+    // FIXME: dp_data_package or data_package ?! none of them seems to work -> console.log(drupalSettings.csisHelpers): undefined
+    if ($type == ("gl_step" || "data_package" || "dp_data_package" || "data_package_metadata") && $view_mode != "compact") {
         $entityInfo = csis_helpers_node_entity_info($entity);
-
-        // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
-        $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = $entityInfo;
 
         $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
         $build['#attached']['library'][] = 'csis_helpers/include_in_report';
@@ -26,6 +24,8 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
         switch ($type) {
             case 'gl_step':
                 $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
+                // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
+                $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = $entityInfo;
                 break;
             case 'data_package':
                 $build['#attached']['drupalSettings']['csisHelpers']['datapackageInfo'] = $entityInfo;
@@ -35,6 +35,8 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
                 break;
                 //default:$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
         }
+    } else {
+        // DEBUG LOG!
     }
 }
 
