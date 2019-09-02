@@ -12,8 +12,10 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
     $type = $entity->bundle();
 
     if ($type == ("gl_step" || "data_package" || "data_package_metadata") && $view_mode != "compact") {
+        $entityInfo = csis_helpers_node_entity_info($entity);
+
         // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
-        $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
+        $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = $entityInfo
 
         $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
         $build['#attached']['library'][] = 'csis_helpers/include_in_report';
@@ -22,10 +24,10 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
         $build['#attached']['library'][] = 'csis_helpers/update_step_relations';
 
         switch ($type) {
-            case 'gl_step':$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_node_entity_info($entity);
-            case 'data_package':$build['#attached']['drupalSettings']['csisHelpers']['datapackageInfo'] = csis_helpers_node_entity_info($entity);
-            case 'data_package_metadata':$build['#attached']['drupalSettings']['csisHelpers']['resourceInfo'] = csis_helpers_node_entity_info($entity);
-            default:$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_node_entity_info($entity);
+            case 'gl_step':$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
+            case 'data_package':$build['#attached']['drupalSettings']['csisHelpers']['datapackageInfo'] = $entityInfo;
+            case 'data_package_metadata':$build['#attached']['drupalSettings']['csisHelpers']['resourceInfo'] = $entityInfo;
+                //default:$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
         }
     }
 }
@@ -115,7 +117,7 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
         case 'gl_step':return array_merge($entityinfo, csis_helpers_node_entity_info_study($entity));
         case 'data_package':return array_merge($entityinfo, csis_helpers_node_entity_info_datapackage($entity));
         case 'data_package_metadata':return array_merge($entityinfo, csis_helpers_node_entity_info_resource($entity));
-        default:return array_merge($entityinfo, csis_helpers_node_entity_info_study($entity));
+            //default:return array_merge($entityinfo, csis_helpers_node_entity_info_study($entity));
     }
 }
 
@@ -129,9 +131,24 @@ function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInt
 {
     $entityinfo = array(
         'name' => $entity->get('title')->value,
-        'spatial_extent' => $entity->get('field_spatial_extent')->value,
     );
-    return $entityinfo;
+
+    /**
+     * @var \Drupal\Core\Entity\EntityInterface[]
+     */
+    $spatial_extends = $entity->get('field_spatial_extent')->referencedEntities(); // referencedEntities() returns an array of entities
+    if (!empty($spatial_extends) && is_array($spatial_extends) && sizeof($spatial_extends) > 0) {
+        $spatialExtent = array(
+            'minx' => $spatial_extend[0]->get('minx')->value,
+            'miny' => $spatial_extend[0]->get('miny')->value,
+            'maxx' => $spatial_extend[0]->get('maxx')->value,
+            'miny' => $spatial_extend[0]->get('miny')->value,
+        );
+
+        return array_merge($entityinfo, $spatialExtent);
+    } else {
+        return $entityinfo;
+    }
 }
 
 /**
@@ -142,12 +159,26 @@ function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInt
  */
 function csis_helpers_node_entity_info_resource(\Drupal\Core\Entity\EntityInterface $entity)
 {
-
     $entityinfo = array(
         'name' => $entity->get('title')->value,
-        'spatial_extent' => $entity->get('field_spatial_extent')->value,
     );
-    return $entityinfo;
+
+    /**
+     * @var \Drupal\Core\Entity\EntityInterface[]
+     */
+    $spatial_extends = $entity->get('field_spatial_extent')->referencedEntities(); // referencedEntities() returns an array of entities
+    if (!empty($spatial_extends) && is_array($spatial_extends) && sizeof($spatial_extends) > 0) {
+        $spatialExtent = array(
+            'minx' => $spatial_extend[0]->get('minx')->value,
+            'miny' => $spatial_extend[0]->get('miny')->value,
+            'maxx' => $spatial_extend[0]->get('maxx')->value,
+            'miny' => $spatial_extend[0]->get('miny')->value,
+        );
+
+        return array_merge($entityinfo, $spatialExtent);
+    } else {
+        return $entityinfo;
+    }
 }
 
 /**
