@@ -24,9 +24,15 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
         $build['#attached']['library'][] = 'csis_helpers/update_step_relations';
 
         switch ($type) {
-            case 'gl_step':$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
-            case 'data_package':$build['#attached']['drupalSettings']['csisHelpers']['datapackageInfo'] = $entityInfo;
-            case 'data_package_metadata':$build['#attached']['drupalSettings']['csisHelpers']['resourceInfo'] = $entityInfo;
+            case 'gl_step':
+                $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
+                break;
+            case 'data_package':
+                $build['#attached']['drupalSettings']['csisHelpers']['datapackageInfo'] = $entityInfo;
+                break;
+            case 'data_package_metadata':
+                $build['#attached']['drupalSettings']['csisHelpers']['resourceInfo'] = $entityInfo;
+                break;
                 //default:$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
         }
     }
@@ -114,9 +120,15 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
     $type = $entity->bundle();
 
     switch ($type) {
-        case 'gl_step':return array_merge($nodeEntityInfo, csis_helpers_node_entity_info_study($entity));
-        case 'data_package':return array_merge($nodeEntityInfo, csis_helpers_node_entity_info_datapackage($entity));
-        case 'data_package_metadata':return array_merge($nodeEntityInfo, csis_helpers_node_entity_info_resource($entity));
+        case 'gl_step':
+            return array_merge($nodeEntityInfo, csis_helpers_node_entity_info_study($entity));
+            break;
+        case 'data_package':
+            return array_merge($nodeEntityInfo, csis_helpers_node_entity_info_datapackage($entity));
+            break;
+        case 'data_package_metadata':
+            return array_merge($nodeEntityInfo, csis_helpers_node_entity_info_resource($entity));
+            break;
             //default:return array_merge($nodeEntityInfo, csis_helpers_node_entity_info_study($entity));
     }
 
