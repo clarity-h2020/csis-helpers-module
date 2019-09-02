@@ -15,7 +15,7 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
         $entityInfo = csis_helpers_node_entity_info($entity);
 
         // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
-        $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = $entityInfo
+        $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = $entityInfo;
 
         $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
         $build['#attached']['library'][] = 'csis_helpers/include_in_report';
