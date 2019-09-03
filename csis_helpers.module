@@ -7,6 +7,26 @@ use Drupal\group\Entity\GroupContent;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
 
+/**
+ * Disable in production!
+ */
+$DEBUG = true;
+
+/**
+ * Poor man's debugger
+ * See https://stackify.com/how-to-log-to-console-in-php/
+ */
+function console_log($output, $with_script_tags = true)
+{
+    if ($DEBUG) {
+        $js_code = 'console.log([CSIS_HELPERS_MODULE > ]' . json_encode($output, JSON_HEX_TAG) . ');';
+        if ($with_script_tags) {
+            $js_code = '<script>' . $js_code . '</script>';
+        }
+        echo $js_code;
+    }
+}
+
 function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode)
 {
     $type = $entity->bundle();
@@ -21,7 +41,7 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
         $build['#attached']['library'][] = 'csis_helpers/seamless';
         $build['#attached']['library'][] = 'csis_helpers/update_step_relations';
         $build['#attached']['library'][] = 'csis_helpers/iframe_connector';
-        
+
         switch ($type) {
             case 'gl_step':
                 $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
@@ -37,7 +57,7 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
                 //default:$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
         }
     } else {
-        // DEBUG LOG!
+        console_log(var_dump($entity));
     }
 }
 
