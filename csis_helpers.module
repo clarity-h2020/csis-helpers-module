@@ -56,7 +56,7 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
                 //default:$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
         }
     } else {
-        console_log('entity type ' . $type . ' not supported');
+        //console_log('entity type ' . $type . ' not supported');
     }
 }
 
@@ -164,7 +164,7 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
  */
 function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInterface $entity)
 {
-    console_log('creating entity info for data package ' . $entity->get('title')->value);
+    //console_log('creating entity info for data package ' . $entity->get('title')->value);
     $datapackageEntityInfo = array(
         'name' => $entity->get('title')->value
     );
@@ -214,7 +214,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     $groupEaaName = null;
     $relations = GroupContent::loadByEntity($entity);
 
-    console_log('creating entity info for study ' . $groupName);
+    //console_log('creating entity info for study ' . $groupName);
 
     foreach ($relations as $relation) {
         $groupid[] = $relation->getGroup()->id();
