@@ -88,6 +88,9 @@
                 mapComponentUrl += miny ? `&miny=${miny}` : '';
                 mapComponentUrl += maxx ? `&maxx=${maxx}` : '';
                 mapComponentUrl += maxy ? `&maxy=${maxy}` : '';
+                // grouping tag/criteria is defined in custom map components so in principle this renders
+                // those custom map components useless ...
+                mapComponentUrl += grouping_tag ? `&grouping_tag=${grouping_tag}` : '';
 
                 console.debug(`initilizing iFrame with ${mapComponentUrl}`);
                 iFrameMapComponent.setAttribute('src', mapComponentUrl);
