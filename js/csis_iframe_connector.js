@@ -36,7 +36,7 @@
             if (undefined !== drupalSettings && undefined !== drupalSettings.csisHelpers) {
                 var csisHelpers = drupalSettings.csisHelpers;
 
-                if (undefined !== csisHelpers.resourceInfo) {
+                if (undefined !== csisHelpers.resourceInfo && mapType == 'ResourcePreviewMap') {
                     console.info(`showing ${mapType} for resource ${csisHelpers.resourceInfo.name}`);
                     resource_uuid = csisHelpers.resourceInfo.uuid;
                     minx = csisHelpers.resourceInfo.minx;
@@ -45,7 +45,7 @@
                     maxy = csisHelpers.resourceInfo.maxy;
                     write_permissions = csisHelpers.resourceInfo.write_permissions;
                 }
-                else if (undefined !== csisHelpers.datapackageInfo) {
+                else if (undefined !== csisHelpers.datapackageInfo && mapType == 'DataPreviewMap' ) {
                     console.info(`showing ${mapType} for datapackage ${csisHelpers.datapackageInfo.name}`);
                     datapackage_uuid = csisHelpers.datapackageInfo.uuid;
                     minx = csisHelpers.datapackageInfo.minx;
@@ -53,7 +53,7 @@
                     maxx = csisHelpers.datapackageInfo.maxx;
                     maxy = csisHelpers.datapackageInfo.maxy;
                     write_permissions = csisHelpers.datapackageInfo.write_permissions;
-                } else if (undefined !== csisHelpers.studyInfo) {
+                } else if (undefined !== csisHelpers.studyInfo) { // implicitly use for study preview map
                     console.info(`showing ${mapType} for study ${csisHelpers.studyInfo.name}`);
                     study_uuid = csisHelpers.studyInfo.uuid;
                     study_area = csisHelpers.studyInfo.study_area;
