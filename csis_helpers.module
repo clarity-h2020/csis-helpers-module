@@ -20,7 +20,8 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
         $build['#attached']['library'][] = 'csis_helpers/html2canvas';
         $build['#attached']['library'][] = 'csis_helpers/seamless';
         $build['#attached']['library'][] = 'csis_helpers/update_step_relations';
-
+        $build['#attached']['library'][] = 'csis_helpers/iframe_connector';
+        
         switch ($type) {
             case 'gl_step':
                 $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;

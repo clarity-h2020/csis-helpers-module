@@ -30,6 +30,12 @@ entityinfo_helpers:
     - core/drupal
     - core/drupalSettings
 
+iframe_connector:
+  js:
+    js/csis_iframe_connector.js:
+  dependencies:
+    - core/drupalSettings
+
 progress_indicator:
   js:
     js/csis_progress_indicator.js:
