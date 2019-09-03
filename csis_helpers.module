@@ -18,19 +18,16 @@ $DEBUG = true;
  */
 function console_log($output, $with_script_tags = true)
 {
-    if ($DEBUG) {
-        $js_code = 'console.log([CSIS_HELPERS_MODULE > ]' . json_encode($output, JSON_HEX_TAG) . ');';
-        if ($with_script_tags) {
-            $js_code = '<script>' . $js_code . '</script>';
-        }
-        echo $js_code;
+    $js_code = "console.log(" . json_encode($output, JSON_HEX_TAG) . ");";
+    if ($with_script_tags) {
+        $js_code = '<script>' . $js_code . '</script>';
     }
+    echo $js_code;
 }
 
 function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode)
 {
     $type = $entity->bundle();
-
     // FIXME: dp_data_package or data_package ?! none of them seems to work -> console.log(drupalSettings.csisHelpers): undefined
     if ($type == ("gl_step" || "data_package" || "dp_data_package" || "data_package_metadata") && $view_mode != "compact") {
         $entityInfo = csis_helpers_node_entity_info($entity);
@@ -57,6 +54,7 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
                 //default:$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
         }
     } else {
+        console_log('entity type '.$type.' not supported');
         console_log(var_dump($entity));
     }
 }
@@ -98,7 +96,6 @@ function csis_helpers_form_group_form_alter(&$form, $form_state, $form_id)
 
 function csis_helpers_preprocess_views_view(&$variables)
 {
-
     $view = $variables['view'];
     //\Drupal::logger('csis helpers')->notice($view->id());
     if ($view->id() == 'data_packages' && $view->current_display == 'browser') {
@@ -166,6 +163,7 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
  */
 function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInterface $entity)
 {
+    console_log('creating entity info for data package '.$entity->get('title')->value);
     $datapackageEntityInfo = array(
         'name' => $entity->get('title')->value,
     );
@@ -196,6 +194,7 @@ function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInt
  */
 function csis_helpers_node_entity_info_resource(\Drupal\Core\Entity\EntityInterface $entity)
 {
+    console_log('creating entity info for resource '.$entity->get('title')->value);
     $resourcEntityInfo = array(
         'name' => $entity->get('title')->value,
     );
@@ -233,6 +232,8 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     $groupArea = null;
     $groupEaaName = null;
     $relations = GroupContent::loadByEntity($entity);
+
+    console_log('creating entity info for study '.$groupName);
 
     foreach ($relations as $relation) {
         $groupid[] = $relation->getGroup()->id();
