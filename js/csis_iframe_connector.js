@@ -45,7 +45,7 @@
                     maxy = csisHelpers.resourceInfo.maxy;
                     write_permissions = csisHelpers.resourceInfo.write_permissions;
                 }
-                else if (undefined !== csisHelpers.datapackageInfo && mapType == 'DataPreviewMap' ) {
+                else if (undefined !== csisHelpers.datapackageInfo && mapType == 'DataPackagePreviewMap' ) {
                     console.info(`showing ${mapType} for datapackage ${csisHelpers.datapackageInfo.name}`);
                     datapackage_uuid = csisHelpers.datapackageInfo.uuid;
                     minx = csisHelpers.datapackageInfo.minx;
@@ -68,7 +68,7 @@
                     datapackage_uuid = csisHelpers.entityinfo.study_datapackage_uuid;
                     write_permissions = csisHelpers.entityinfo.write_permissions;
                 } else {
-                    console.error('no entityinfo objects found, map component embedded for unsupported entity type!')
+                    console.error(`no entityinfo objects found for ${mapType} map component embedded for unsupported entity type!`);
                 }
 
                 /**

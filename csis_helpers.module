@@ -185,7 +185,7 @@ function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInt
  */
 function csis_helpers_node_entity_info_resource(\Drupal\Core\Entity\EntityInterface $entity)
 {
-    console_log('creating entity info for resource ' . $entity->get('title')->value);
+    //console_log('creating entity info for resource ' . $entity->get('title')->value);
     $resourcEntityInfo = array(
         'name' => $entity->get('title')->value
     );
@@ -420,7 +420,7 @@ function extractSpatialExtend($entity)
 {
     $spatial_extends = $entity->get('field_spatial_extent')->referencedEntities(); // referencedEntities() returns an array of entities
     if (!empty($spatial_extends) && is_array($spatial_extends) && sizeof($spatial_extends) > 0 && $spatial_extends[0] != null) {
-        console_log($spatial_extends[0]->get('field_bounding_box')->value);
+        //console_log($spatial_extends[0]->get('field_bounding_box')->value);
         $spatialExtent = array(
             'minx' => $spatial_extends[0]->get('field_xmin')->value,
             'miny' => $spatial_extends[0]->get('field_ymin')->value,
