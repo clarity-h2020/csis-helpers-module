@@ -18,18 +18,20 @@ $DEBUG = true;
  */
 function console_log($output, $with_script_tags = true)
 {
-    $js_code = "console.log(" . json_encode($output, JSON_HEX_TAG) . ");";
+    $js_code = "console.debug(" . json_encode($output, JSON_HEX_TAG) . ");";
     if ($with_script_tags) {
         $js_code = '<script>' . $js_code . '</script>';
     }
     echo $js_code;
 }
 
+/**
+ * FIXME: This method is invoked for each entity on the page and thus overwrites all other entity Infos
+ */
 function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode)
 {
     $type = $entity->bundle();
-    // FIXME: dp_data_package or data_package ?! none of them seems to work -> console.log(drupalSettings.csisHelpers): undefined
-    if ($type == ("gl_step" || "data_package" || "dp_data_package" || "data_package_metadata") && $view_mode != "compact") {
+    if ($type == ("gl_step" || "data_package" || "data_package_metadata") && $view_mode != "compact") {
         $entityInfo = csis_helpers_node_entity_info($entity);
 
         $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
@@ -54,8 +56,7 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
                 //default:$build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
         }
     } else {
-        console_log('entity type '.$type.' not supported');
-        console_log(var_dump($entity));
+        console_log('entity type ' . $type . ' not supported');
     }
 }
 
@@ -163,27 +164,17 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
  */
 function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInterface $entity)
 {
-    console_log('creating entity info for data package '.$entity->get('title')->value);
+    console_log('creating entity info for data package ' . $entity->get('title')->value);
     $datapackageEntityInfo = array(
-        'name' => $entity->get('title')->value,
+        'name' => $entity->get('title')->value
     );
 
-    /**
-     * @var \Drupal\Core\Entity\EntityInterface[]
-     */
-    $spatial_extends = $entity->get('field_spatial_extent')->referencedEntities(); // referencedEntities() returns an array of entities
-    if (!empty($spatial_extends) && is_array($spatial_extends) && sizeof($spatial_extends) > 0) {
-        $spatialExtent = array(
-            'minx' => $spatial_extend[0]->get('minx')->value,
-            'miny' => $spatial_extend[0]->get('miny')->value,
-            'maxx' => $spatial_extend[0]->get('maxx')->value,
-            'miny' => $spatial_extend[0]->get('miny')->value,
-        );
-
+    $spatialExtent = extractSpatialExtend($entity);
+    if ($spatialExtent != null) {
         return array_merge($datapackageEntityInfo, $spatialExtent);
-    } else {
-        return $datapackageEntityInfo;
     }
+
+    return $datapackageEntityInfo;
 }
 
 /**
@@ -194,27 +185,17 @@ function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInt
  */
 function csis_helpers_node_entity_info_resource(\Drupal\Core\Entity\EntityInterface $entity)
 {
-    console_log('creating entity info for resource '.$entity->get('title')->value);
+    console_log('creating entity info for resource ' . $entity->get('title')->value);
     $resourcEntityInfo = array(
-        'name' => $entity->get('title')->value,
+        'name' => $entity->get('title')->value
     );
 
-    /**
-     * @var \Drupal\Core\Entity\EntityInterface[]
-     */
-    $spatial_extends = $entity->get('field_spatial_extent')->referencedEntities(); // referencedEntities() returns an array of entities
-    if (!empty($spatial_extends) && is_array($spatial_extends) && sizeof($spatial_extends) > 0) {
-        $spatialExtent = array(
-            'minx' => $spatial_extend[0]->get('minx')->value,
-            'miny' => $spatial_extend[0]->get('miny')->value,
-            'maxx' => $spatial_extend[0]->get('maxx')->value,
-            'miny' => $spatial_extend[0]->get('miny')->value,
-        );
-
+    $spatialExtent = extractSpatialExtend($entity);
+    if ($spatialExtent != null) {
         return array_merge($resourcEntityInfo, $spatialExtent);
-    } else {
-        return $resourcEntityInfo;
     }
+
+    return $resourcEntityInfo;
 }
 
 /**
@@ -233,7 +214,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     $groupEaaName = null;
     $relations = GroupContent::loadByEntity($entity);
 
-    console_log('creating entity info for study '.$groupName);
+    console_log('creating entity info for study ' . $groupName);
 
     foreach ($relations as $relation) {
         $groupid[] = $relation->getGroup()->id();
@@ -429,4 +410,26 @@ function csis_helpers_jsonapi_entity_filter_access(\Drupal\Core\Entity\EntityTyp
     return ([
         JSONAPI_FILTER_AMONG_ALL => AccessResult::allowed(),
     ]);
+}
+
+/**
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ * @return Array
+ */
+function extractSpatialExtend($entity)
+{
+    $spatial_extends = $entity->get('field_spatial_extent')->referencedEntities(); // referencedEntities() returns an array of entities
+    if (!empty($spatial_extends) && is_array($spatial_extends) && sizeof($spatial_extends) > 0 && $spatial_extends[0] != null) {
+        console_log($spatial_extends[0]->get('field_bounding_box')->value);
+        $spatialExtent = array(
+            'minx' => $spatial_extends[0]->get('field_xmin')->value,
+            'miny' => $spatial_extends[0]->get('field_ymin')->value,
+            'maxx' => $spatial_extends[0]->get('field_xmax')->value,
+            'maxy' => $spatial_extends[0]->get('field_ymax')->value,
+        );
+
+        return $spatialExtent;
+    } else {
+        return null;
+    }
 }

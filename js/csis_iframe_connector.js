@@ -18,9 +18,20 @@
      * @param {String} grouping_tag 
      * @param {Object} iFrameMapComponent 
      */
-    function initMapComponent(mapType = 'GenericMap', grouping_tag = 'taxonomy_term--eu_gl', iFrameMapComponent = document.getElementById('map-component')) {
+
+    if(!drupalSettings.csisHelpers) {
+        drupalSettings.csisHelpers = {};
+    }
+
+    drupalSettings.csisHelpers.initMapComponent = function initMapComponent(mapType = 'GenericMap', grouping_tag = 'taxonomy_term--eu_gl', iFrameMapComponent = document.getElementById('map-component')) {
         try {
-            var host = window.location.host, study_uuid, study_area, emikat_id, datapackage_uuid, write_permissions, resource_uuid, minx, miny, maxx, maxy;
+            
+            if(undefined == iFrameMapComponent || null == iFrameMapComponent) {
+                console.warn('initMapComponent(): no iFrameMapComponent available');
+            }
+            
+            // window.location.origin instead of window.location.host: we need the protocol, too!
+            var host = window.location.origin, study_uuid, study_area, emikat_id, datapackage_uuid, write_permissions, resource_uuid, minx, miny, maxx, maxy;
 
             if (undefined !== drupalSettings && undefined !== drupalSettings.csisHelpers) {
                 var csisHelpers = drupalSettings.csisHelpers;
@@ -65,18 +76,18 @@
                  * 
                  * @type {String}
                  */
-                var mapComponentUrl = `https://${host}/apps/map-component/build/${mapType}/?host=${host}`;
+                var mapComponentUrl = `${host}/apps/map-component/build/${mapType}/?host=${host}`;
 
-                study_uuid ? mapComponentUrl.append(`&study_uuid=${study_uuid}`) : noop;
-                study_area ? mapComponentUrl.append(`&study_area=${study_area}`) : noop;
-                emikat_id ? mapComponentUrl.append(`&emikat_id=${emikat_id}`) : noop;
-                datapackage_uuid ? mapComponentUrl.append(`datapackage_uuid=${datapackage_uuid}`) : noop;
-                write_permissions ? mapComponentUrl.append(`&write_permissions=${write_permissions}`) : noop;
-                resource_uuid ? mapComponentUrl.append(`&resource_uuid=${resource_uuid}`) : noop;
-                minx ? mapComponentUrl.append(`&minx=${minx}`) : noop;
-                miny ? mapComponentUrl.append(`&miny=${miny}`) : noop;
-                maxx ? mapComponentUrl.append(`&maxx=${maxx}`) : noop;
-                maxy ? mapComponentUrl.append(`&maxy=${maxy}`) : noop;
+                mapComponentUrl += study_uuid ? `&study_uuid=${study_uuid}` : '';
+                mapComponentUrl += study_area ? `&study_area=${study_area}` : '';
+                mapComponentUrl += emikat_id ? `&emikat_id=${emikat_id}` : '';
+                mapComponentUrl += datapackage_uuid ? `&datapackage_uuid=${datapackage_uuid}` : '';
+                mapComponentUrl += write_permissions ? `&write_permissions=${write_permissions}` : '';
+                mapComponentUrl += resource_uuid ? `&resource_uuid=${resource_uuid}` : '';
+                mapComponentUrl += minx ? `&minx=${minx}` : '';
+                mapComponentUrl += miny ? `&miny=${miny}` : '';
+                mapComponentUrl += maxx ? `&maxx=${maxx}` : '';
+                mapComponentUrl += maxy ? `&maxy=${maxy}` : '';
 
                 console.debug(`initilizing iFrame with ${mapComponentUrl}`);
                 iFrameMapComponent.setAttribute('src', mapComponentUrl);
