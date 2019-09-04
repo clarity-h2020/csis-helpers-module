@@ -40,6 +40,7 @@ var reportImageTemplate = {
                 $(this).hide();
                 $(this).parent().after('<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>');
 
+                var iframeFound = false;
                 var targetNid = $(this).attr('data-camera-target'); // not used anymore, so data-camera-target not needed anymore?
                 var targetElement = undefined;
                 if ($('.field.field--name-field-react-mount').get(0)) {
@@ -48,6 +49,7 @@ var reportImageTemplate = {
                 } else if ($('<iframe>').get(0)) {
                     //FIXME: Support for multiple iFrames!
                     targetElement = $('iframe').get(0).id;
+                    iframeFound = true;
                     console.debug('detected extended iFrame: ' + targetElement);
                 } else {
                     console.warn('sorry, no inlcude in report element  found!');
@@ -77,8 +79,28 @@ var reportImageTemplate = {
                 // .eq(0) gets the 1st jQuery object while .get(0) get the 1st DOM Element. 
                 if ($('.field.field--name-field-react-mount').height() > 0 || $('iframe').eq(0).height() > 0) {
                     // create screenshot and send POST request for it via JSON:API
-                    html2canvas(document.getElementById(targetElement), { useCORS: true, allowTaint: true, async: false, logging: false, foreignObjectRendering: false }).then(canvas => {
-                        canvas.toBlob(function (blob) {
+
+                    var elementToPrint = document.getElementById(targetElement);
+
+                    if (iframeFound) {
+                    //print the content document, if a iframe was found, because canvas2html cannot print an iframe element
+                                elementToPrint = elementToPrint.contentDocument;
+                    }
+
+                    if (iframeFound && elementToPrint.getElementById('#map') != null) {
+                        // a leaflet map was found
+                        // the css property translate cannot be handled properly by html2canvas, if negative values are used and that is the case, if overlay layers are used.
+                        // So replace the translate3d property with the top and left property. It was assumed that the third argument of translate3d is 0px 
+                        elementToPrint = elementToPrint.getElementById('#map');
+                        replaceTranslate3dStyle(elementToPrint);
+                    } else if (iframeFound) {
+                        elementToPrint = elementToPrint.body.getElementsByClassName('container ng-scope')[0];
+                    } else if (elementToPrint.getElementsByClassName('leaflet-tile') != null && elementToPrint.getElementsByClassName('leaflet-tile').length > 0) {
+                        replaceTranslate3dStyle(elementToPrint);
+                    }
+
+                    html2canvas(elementToPrint, { useCORS: true, allowTaint: false, async: false, logging: true, foreignObjectRendering: false }).then(canvas => {
+                            canvas.toBlob(function (blob) {
                             getCsrfToken(function (csrfToken) {
                                 postScreenshotFile(csrfToken, stepUUID, blob, imageName);
                             });
@@ -90,6 +112,28 @@ var reportImageTemplate = {
     };
 })(jQuery, Drupal, drupalSettings);
 
+/**
+ * Replace translate3d with left and top values
+ */
+function replaceTranslate3dStyle(element) {
+    var tiles = element.getElementsByClassName('leaflet-tile');
+
+    if (tiles != null && tiles.length > 0) {
+       for (var index = 0; index < tiles.length; ++index) {
+            var transformStyle = tiles[index].style['transform'];
+            if (transformStyle != null) {
+    	        var trans_val = transformStyle.replace('translate3d','').replace(/px/g,'').replace('(','').replace(')','').split(',');
+                var trans_y = parseInt(trans_val[trans_val.length - 2]) ,
+	            trans_x = parseInt(trans_val[trans_val.length - 3]);
+    	        if (trans_y < 0 || trans_x < 0) {
+	                tiles[index].style['transform'] = 'translate3d(0px,0px,0px)';
+                    tiles[index].style['left'] = trans_x + 'px';
+                    tiles[index].style['top'] = trans_y + 'px';
+	            }
+            }
+        }
+    }
+}
 
 function getCsrfToken(callback) {
     jQuery
