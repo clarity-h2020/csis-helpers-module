@@ -169,7 +169,7 @@ function csis_helpers_node_entity_info_datapackage(\Drupal\Core\Entity\EntityInt
         'name' => $entity->get('title')->value
     );
 
-    $spatialExtent = extractSpatialExtend($entity);
+    $spatialExtent = extractSpatialExtent($entity);
     if ($spatialExtent != null) {
         return array_merge($datapackageEntityInfo, $spatialExtent);
     }
@@ -190,7 +190,7 @@ function csis_helpers_node_entity_info_resource(\Drupal\Core\Entity\EntityInterf
         'name' => $entity->get('title')->value
     );
 
-    $spatialExtent = extractSpatialExtend($entity);
+    $spatialExtent = extractSpatialExtent($entity);
     if ($spatialExtent != null) {
         return array_merge($resourcEntityInfo, $spatialExtent);
     }
@@ -416,17 +416,21 @@ function csis_helpers_jsonapi_entity_filter_access(\Drupal\Core\Entity\EntityTyp
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Array
  */
-function extractSpatialExtend($entity)
+function extractSpatialExtent($entity)
 {
-    $spatial_extends = $entity->get('field_spatial_extent')->referencedEntities(); // referencedEntities() returns an array of entities
-    if (!empty($spatial_extends) && is_array($spatial_extends) && sizeof($spatial_extends) > 0 && $spatial_extends[0] != null) {
-        //console_log($spatial_extends[0]->get('field_bounding_box')->value);
-        $spatialExtent = array(
-            'minx' => $spatial_extends[0]->get('field_xmin')->value,
-            'miny' => $spatial_extends[0]->get('field_ymin')->value,
-            'maxx' => $spatial_extends[0]->get('field_xmax')->value,
-            'maxy' => $spatial_extends[0]->get('field_ymax')->value,
-        );
+    $spatial_extents = $entity->get('field_spatial_extent')->referencedEntities(); // referencedEntities() returns an array of entities
+    if (!empty($spatial_extents) && is_array($spatial_extents) && sizeof($spatial_extents) > 0 
+    && $spatial_extents[0] != null && $spatial_extents[0]->get('field_bounding_box') != null) {
+        //console_log($spatial_extents[0]->get('field_bounding_box')->value);
+        $spatialExtent = array('spatial_extent' => $spatial_extents[0]->get('field_bounding_box')->value);
+        
+        // @deprecated See https://github.com/clarity-h2020/map-component/issues/53
+        /*$spatialExtent = array(
+            'minx' => $spatial_extents[0]->get('field_xmin')->value,
+            'miny' => $spatial_extents[0]->get('field_ymin')->value,
+            'maxx' => $spatial_extents[0]->get('field_xmax')->value,
+            'maxy' => $spatial_extents[0]->get('field_ymax')->value,
+        );*/
 
         return $spatialExtent;
     } else {

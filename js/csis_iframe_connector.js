@@ -28,6 +28,7 @@
             
             if(undefined == iFrameMapComponent || null == iFrameMapComponent) {
                 console.warn('initMapComponent(): no iFrameMapComponent available');
+                return;
             }
             
             // window.location.origin instead of window.location.host: we need the protocol, too!
@@ -39,19 +40,20 @@
                 if (undefined !== csisHelpers.resourceInfo && mapType == 'ResourcePreviewMap') {
                     console.info(`showing ${mapType} for resource ${csisHelpers.resourceInfo.name}`);
                     resource_uuid = csisHelpers.resourceInfo.uuid;
-                    minx = csisHelpers.resourceInfo.minx;
-                    miny = csisHelpers.resourceInfo.miny;
-                    maxx = csisHelpers.resourceInfo.maxx;
-                    maxy = csisHelpers.resourceInfo.maxy;
+                    // Yeah, 'study_area' is not correct, but we reuse this query param since we don't want to re-implement 
+                    // handling of initial bbox just because the data model contains rubbish. :-/
+                    // See https://github.com/clarity-h2020/map-component/issues/53
+                    study_area = csisHelpers.resourceInfo.spatial_extent;
+                    //minx = csisHelpers.resourceInfo.minx;
+                    //miny = csisHelpers.resourceInfo.miny;
+                    //maxx = csisHelpers.resourceInfo.maxx;
+                    //maxy = csisHelpers.resourceInfo.maxy;
                     write_permissions = csisHelpers.resourceInfo.write_permissions;
                 }
                 else if (undefined !== csisHelpers.datapackageInfo && mapType == 'DataPackagePreviewMap' ) {
                     console.info(`showing ${mapType} for datapackage ${csisHelpers.datapackageInfo.name}`);
                     datapackage_uuid = csisHelpers.datapackageInfo.uuid;
-                    minx = csisHelpers.datapackageInfo.minx;
-                    miny = csisHelpers.datapackageInfo.miny;
-                    maxx = csisHelpers.datapackageInfo.maxx;
-                    maxy = csisHelpers.datapackageInfo.maxy;
+                    study_area = csisHelpers.datapackageInfo.spatial_extent;
                     write_permissions = csisHelpers.datapackageInfo.write_permissions;
                 } else if (undefined !== csisHelpers.studyInfo) { // implicitly use for study preview map
                     console.info(`showing ${mapType} for study ${csisHelpers.studyInfo.name}`);
