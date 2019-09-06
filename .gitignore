@@ -40,3 +40,4 @@ xmlrpc.php
 
 # Ignore temp stuff
 *.swp
+*.save
