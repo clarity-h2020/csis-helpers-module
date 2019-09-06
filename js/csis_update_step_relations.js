@@ -2,56 +2,63 @@
 
   Drupal.behaviors.update_step_relations = {
     attach: function (context, settings) {
-/*    
+/*
   	  // not needed currently since we managed to split the table into two parts (included and non-included with the respective buttons)
-      // get all twins which are already included in the GL-Step and change the button to perform a DELETE	
+      // get all twins which are already included in the GL-Step and change the button to perform a DELETE
       $('.twins-map-attachment', context).once('update_step_relations_init_buttons').each(function(event) {
     	  console.log("initializing buttons for Twin-actions")
   	      initializeButtons(drupalSettings.csisHelpers.entityinfo.step_uuid);
-	  });	
-*/  
+	  });
+*/
 
       // if user clicks the action button, either POST or DELETE the relation between Twin and GL-Step
       $('.update-step-relations', context).once('update_step_relations').on('click', function(event) {
+				// TODO: cleaner solution would be to use button elements instead of span, where 'disabled' attribute works by default (all Views need updates!)
+				if ($(this).attr("disabled")) {
+					return;
+				}
     	  var targetType = $(this).attr('data-type');
     	  var stepUUID = drupalSettings.csisHelpers.entityinfo.step_uuid;
     	  var action = $(this).attr('data-action');
-    	  
+
     	  if (action == "post") {
-    		  console.log("adding " + targetType + "-relation to/from GL-Step");
+    		  console.log("adding " + targetType + "-relation to GL-Step");
     	  }
     	  else {
-    		  console.log("removing " + targetType + "-relation to/from GL-Step");
+    		  console.log("removing " + targetType + "-relation from GL-Step");
     	  }
-    	  
+
     	  // deactivate other buttons, so that only one AJAX request is being handled at a time (prevent problems with interferences)
-    	  $('span.update-step-relations').attr('disabled', 'disabled');
+				$('span.update-step-relations').attr('disabled', 'disabled');
 
     	  // only necessary if this functionality will be used for other content types as well
-    	  if (targetType == "twin" || targetType == "showcase") {
+    	  if (targetType == "twin" || targetType == "showcase" || targetType == "adaptation_options") {
 	    	  var elUUID = $(this).attr('data-uuid');
 	    	  var elID = $(this).attr('data-camera-target');
 	    	  console.log("GL-step UUID: " + stepUUID);
-	    	  console.log("Twin UUID: " + elUUID);
-	    	  
+	    	  console.log(targetType + " UUID: " + elUUID);
+
 	    	  // create payload with step-relation  (type -> node type, id -> node UUID)
 	    	  var postData = {'data':[{'type': 'node--'+targetType, 'id': elUUID}]};
-	    		  
+
 	    	  getCsrfToken(function (csrfToken) {
 	    		  updateRelationForStep(csrfToken, action, stepUUID, elUUID, postData);
-	    	  }); 
-	    	  
+	    	  });
+
 	    	  // remove Twin-Div if in Summary-tab
 	    	  if (action == "delete") {
 	    		  $('div[data-history-node-id="'+elID+'"]').remove();
 	    	  }
-	    	  
+
 	    	  // replace button with css loading-animation
 	    	  $(this).hide();
-              $(this).after('<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>');	    	  	    	  
-    	  }
+              $(this).after('<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>');
+				}
+				else {
+					console.log(targetType + " content type is currently not supported for this feature");
+				}
       });
-      
+
     }
   };
 })(jQuery, Drupal, drupalSettings);
@@ -81,15 +88,15 @@ function updateRelationForStep(csrfToken, action, stepUUID, twinUUID, postData) 
 			  //console.log(data);
 			  //console.log(status);
 			  //console.log(xhr);
-			  console.log("successfully updated relationship for GL-Step");
-			  
+			  console.log("successfully updated relationship for GL-Step: " + stepUUID);
+
 			  // if element in "Available-Table", it needs to be removed manually, since View is not auto-updated (due to otherwise lost filter options)
 			  if (action == "post") {
 			      jQuery('span[data-uuid="'+twinUUID+'"]').closest('tr').remove();
 			  }
 			  // once AJAX-request is done re-activate buttons
 			  jQuery('span.update-step-relations').removeAttr("disabled");
-			  updateView();   
+			  updateView();
 		  }
 	});
 }
@@ -120,12 +127,12 @@ function initializeButtons(stepUUID) {
 		    "Content-Type": "application/vnd.api+json",
 		    "Accept": "application/vnd.api+json"
 		  },
-		  success: function(data) {  
+		  success: function(data) {
 			  // for each found Twin change the Button to do a DELETE request (since by default they perform a POST)
-	          for (var index in data.data) {        	  	        	
+	          for (var index in data.data) {
 	        	  jQuery('span[data-uuid="'+data.data[index]['id']+'"]').attr('data-action', 'delete').text('Remove from Report');
 	          }
-	          
+
 	          jQuery('span.update-step-relations').removeAttr("disabled");
 	          console.log("done initializing");
 		  }
