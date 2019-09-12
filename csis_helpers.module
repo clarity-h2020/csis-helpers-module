@@ -325,7 +325,7 @@ function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity
         /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
         $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
 
-        // check if Study contains all relevant information for Emikat and if they were changed
+        // check StudyType and if Study contains all relevant information for Emikat and if they were changed
         try {
             $statusCode = $emikatService->checkStudyChanges($entity);
             if ($statusCode) {

@@ -2,6 +2,7 @@
 namespace Drupal\csis_helpers\Utils;
 
 use \GuzzleHttp\Exception\RequestException;
+use Drupal\taxonomy\Entity\Term;
 
 /**
  * Class EmikatHelperFunctions.
@@ -20,22 +21,51 @@ class EmikatHelperFunctions {
    * @return integer status code
    */
   public function checkStudyChanges(\Drupal\Core\Entity\EntityInterface $entity) {
+    /*Todo: implement following workflow
+    - if calcMethod does not contain "emikat":
+      - if origCalcMethod contains "emikat" --> immediately return status = 3 (Study no longer active in Emikat)
+      - else --> immediately return status = 0, since Study was/is not relevant for Emikat
+    - else:
+      - if calcMethod != origCalcMethod:
+        - if origCalcMethod contains "emikat" --> set status = 2, since calculations need to be completed again
+        - else --> potentially trigger initial PUT request
+      - else --> do nothing since calcMethod didn't change
+
+      Questions: would it be better to first check if studytype has changed?
+    */
+
+    $studyTypeTerm = Term::load($entity->get('field_study_type')->target_id);
+    //dump($studyTypeTerm);
+    $calcMethodTerms = $studyTypeTerm->get('field_study_calculation')->referencedEntities();
+    //dump($calcMethodTerms);
+    foreach ($calcMethodTerms as $calcMethodTerm) {
+      $calcMethodID = $calcMethodTerm->get("field_calculation_method_id")->value;
+      //dump($calcMethodID);
+    }
+    //exit(1);
+
+
     /*
       status codes:
       0 -> don't trigger Emikat
       1 -> trigger Emikat, recalculation not required
-      2- > trigger Emikat, recalculation required
+      2 -> trigger Emikat, recalculation required
+      3 -> trigger Emikat, set Study to non-active since StudyType no longer compatible with Emikat
     */
     $status = 0;
 
     // if Study was just created it cannot yet have all necessary data since intial form doesn't provide those needed fields
     // likewise don't trigger Emikat if some relevant fields are still missing
-    if ($entity->isNew() || $entity->get("field_study_goa")->isEmpty() || $entity->get("field_area")->isEmpty() || $entity->field_data_package->isEmpty()) {
+    if ($entity->isNew() || $entity->get('field_study_type')->isEmpty() || $entity->get("field_study_goa")->isEmpty() || $entity->get("field_area")->isEmpty() || $entity->field_data_package->isEmpty()) {
       // \Drupal::logger('EmikatHelperFunctions')->notice(
       //   "Emikat not notified because study either new or not all relevant fields are set"
       // );
       return $status;
     }
+
+    $studyType = Term::load($entity->get('field_study_type')->target_id);
+    dump($studyType);
+    exit(1);
 
     // check relevant fields and set status
     if ($entity->label() != $entity->original->label()) {
