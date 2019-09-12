@@ -320,17 +320,17 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
 function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity)
 {
 
-    // triggering Emikat only needed for Studies (additionally: don't trigger it in a local environment)
-    if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() != "http://localhost:8080") {
+    // triggering Emikat only needed for Studies (additionally: trigger Emikat only on live-site)
+    if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() == "https://csis.myclimateservice.eu") {
         /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
         $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
 
         // check if Study contains all relevant information for Emikat and if they were changed
         try {
-            $trigger = $emikatService->checkStudyChanges($entity);
-            if ($trigger) {
+            $statusCode = $emikatService->checkStudyChanges($entity);
+            if ($statusCode) {
                 // changes are relevant -> notify Emikat
-                $result = $emikatService->triggerEmikat($entity);
+                $result = $emikatService->triggerEmikat($entity, $statusCode);
 
                 if ($result) {
                     \Drupal::logger('csis_helpers')->notice(
@@ -419,11 +419,11 @@ function csis_helpers_jsonapi_entity_filter_access(\Drupal\Core\Entity\EntityTyp
 function extractSpatialExtent($entity)
 {
     $spatial_extents = $entity->get('field_spatial_extent')->referencedEntities(); // referencedEntities() returns an array of entities
-    if (!empty($spatial_extents) && is_array($spatial_extents) && sizeof($spatial_extents) > 0 
+    if (!empty($spatial_extents) && is_array($spatial_extents) && sizeof($spatial_extents) > 0
     && $spatial_extents[0] != null && $spatial_extents[0]->get('field_bounding_box') != null) {
         //console_log($spatial_extents[0]->get('field_bounding_box')->value);
         $spatialExtent = array('spatial_extent' => $spatial_extents[0]->get('field_bounding_box')->value);
-        
+
         // @deprecated See https://github.com/clarity-h2020/map-component/issues/53
         /*$spatialExtent = array(
             'minx' => $spatial_extents[0]->get('field_xmin')->value,

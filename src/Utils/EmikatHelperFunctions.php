@@ -10,64 +10,53 @@ class EmikatHelperFunctions {
 
   /**
    * Checks based on relevant fields whether Emikat should be triggered or not
+   * and if recalculation on Emikat-side is necessary
    * considered "relevant" are for now the following fields:
    * - Study area
    * - referenced Data package
    * - Study title and goal (but they don't require recalculations in case they are changed)
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
-   * @return true if Emikat needs to be triggered, false otherwise
+   * @return integer status code
    */
   public function checkStudyChanges(\Drupal\Core\Entity\EntityInterface $entity) {
+    /*
+      status codes:
+      0 -> don't trigger Emikat
+      1 -> trigger Emikat, recalculation not required
+      2- > trigger Emikat, recalculation required
+    */
+    $status = 0;
 
     // if Study was just created it cannot yet have all necessary data since intial form doesn't provide those needed fields
     // likewise don't trigger Emikat if some relevant fields are still missing
     if ($entity->isNew() || $entity->get("field_study_goa")->isEmpty() || $entity->get("field_area")->isEmpty() || $entity->field_data_package->isEmpty()) {
       // \Drupal::logger('EmikatHelperFunctions')->notice(
-      //   "Emikat not notified because study either new or not all fields existant"
+      //   "Emikat not notified because study either new or not all relevant fields are set"
       // );
-      return false;
+      return $status;
     }
 
-    // check relevant fields and return TRUE (-> notify Emikat) if original value differs from new value
+    // check relevant fields and set status
     if ($entity->label() != $entity->original->label()) {
-      return true;
+      $status = 1;
     }
     else if ($entity->get("field_study_goa")->getString() != $entity->original->get("field_study_goa")->getString()) {
-      return true;
+      $status = 1;
     }
     else if ($entity->get("field_area")->getString() != $entity->original->get("field_area")->getString()) {
-      return true;
+      $status = 2;
     }
 
-    // since Reference field, check datapackage field contents before trying to access them (needs to be done everytime since user could potentially remove datapackage from Study and leave it empty)
+    // since it's a Reference field, check datapackage field contents before trying to access them
+    // (needs to be done everytime since user could potentially remove datapackage from Study and leave it empty)
     $datapackage = ($entity->field_data_package->isEmpty() ? "empty" : $entity->field_data_package->entity->label());
     $datapackageOrig = ($entity->original->field_data_package->isEmpty() ? "empty" : $entity->original->field_data_package->entity->label());
     if ($datapackage != $datapackageOrig) {
-      return true;
+      $status = 2;
     }
 
-    return false;
-
-    // $studyTitle = $entity->label();
-    // $studyTitleOrig = $entity->original->label();
-
-    // $studyGoal = $entity->get("field_study_goa")->getString();
-    // $studyGoalOrig = $entity->original->get("field_study_goa")->getString();
-
-    // $area = $entity->get("field_area")->getString();
-    // $areaOrig = $entity->original->get("field_area")->getString();
-
-    // check datapackage field contents before trying to access them (needs to be done everytime since user could potentially remove datapackage from Study and leave it empty)
-    //$datapackage = ( $entity->field_data_package->isEmpty() ? "empty" : $entity->field_data_package->entity->label());
-    //$datapackageOrig = ($entity->original->field_data_package->isEmpty() ? "empty" : $entity->original->field_data_package->entity->label());
-
-    // // only trigger Emikat if one of the relevant fields has changed
-    // if ($studyTitle != $studyTitleOrig || $studyGoal != $studyGoalOrig || $area != $areaOrig || $datapackage != $datapackageOrig) {
-    //   $trigger = true;
-    // }
-
-    //return false;
+    return $status;
   }
 
   /**
@@ -76,7 +65,7 @@ class EmikatHelperFunctions {
    * @param \Drupal\Core\Entity\EntityInterface $entity
    * @return true if Request was succesfull, otherwise false
    */
-  public function triggerEmikat(\Drupal\Core\Entity\EntityInterface $entity) {
+  public function triggerEmikat(\Drupal\Core\Entity\EntityInterface $entity, $statusCode) {
     $rawArea = $entity->get("field_area")->get(0)->getValue();
     $studyGoal = substr($entity->get("field_study_goa")->getString(), 0, 500);
     $studyID = $entity->id();
@@ -94,6 +83,12 @@ class EmikatHelperFunctions {
       " \nCSIS_URL: " . $studyRestURL .
       " \nCSIS_COUNTRY_CODE: " . $countryCode .
       " \nCSIS_CITY: " . $city;
+
+    // let Emikat know whether the changes in the Study require a recalculation (only needed in POST request)
+    $forceRecalculate = false;
+    if ($statusCode == 2) {
+      $forceRecalculate = true;
+    }
 
     // if no emikatID -> Study not yet existant in Emikat -> send new Study via PUT (otherwise update existing one via POST)
     if (!$emikatID) {
@@ -116,7 +111,8 @@ class EmikatHelperFunctions {
         array(
           "name" => $entity->label() . " | " . $studyID,
           "description" => $description,
-          "status" => "AKT"
+          "status" => "AKT",
+          "forceRecalculate" => $forceRecalculate
         )
       );
       $this->sendPostRequest($payload, $auth, $emikatID);
