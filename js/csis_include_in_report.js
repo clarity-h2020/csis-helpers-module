@@ -113,25 +113,45 @@ var reportImageTemplate = {
 })(jQuery, Drupal, drupalSettings);
 
 /**
- * Replace translate3d with left and top values
+ * Replace the translate3d style of the given element and all children
  */
 function replaceTranslate3dStyle(element) {
-    var tiles = element.getElementsByClassName('leaflet-tile');
+	replaceTranslate3dStyleByElement(element);
+	var subElement = element.firstChild;
+	
+	while (subElement) {
+		replaceTranslate3dStyle(subElement);
+		subElement = subElement.nextSibling;
+	}
+}
 
-    if (tiles != null && tiles.length > 0) {
-       for (var index = 0; index < tiles.length; ++index) {
-            var transformStyle = tiles[index].style['transform'];
-            if (transformStyle != null) {
-    	        var trans_val = transformStyle.replace('translate3d','').replace(/px/g,'').replace('(','').replace(')','').split(',');
-                var trans_y = parseInt(trans_val[trans_val.length - 2]) ,
-	            trans_x = parseInt(trans_val[trans_val.length - 3]);
-    	        if (trans_y < 0 || trans_x < 0) {
-	                tiles[index].style['transform'] = 'translate3d(0px,0px,0px)';
-                    tiles[index].style['left'] = trans_x + 'px';
-                    tiles[index].style['top'] = trans_y + 'px';
-	            }
-            }
-        }
+/**
+ * Replace translate3d with left and top values
+ */
+function replaceTranslate3dStyleByElement(element) {
+    if (element.style != null) {
+	    var transformStyle = element.style['transform'];
+
+        if (transformStyle != null) {
+		    var trans_val = transformStyle.replace('translate3d','').replace(/px/g,'').replace('(','').replace(')','').split(',');
+		    var trans_y = parseInt(trans_val[trans_val.length - 2]) ,
+		        trans_x = parseInt(trans_val[trans_val.length - 3]);
+
+            if (trans_y < 0 || trans_x < 0) {
+		            element.style['transform'] = 'translate3d(0px,0px,0px)';
+    			if (element.style['left'] != null && element.style['left']  != "" && element.style['left'].indexOf('px') != -1) {
+	    	    		element.style['left'] = parseInt(element.style['left'].replace(/px/g,'')) + trans_x + 'px';
+		    	} else {
+		        		element.style['left'] = trans_x + 'px';
+    			}
+
+	    		if (element.style['top'] != null && element.style['top']  != "" && element.style['top'].indexOf('px') != -1) {
+		        		element.style['top'] = parseInt(element.style['top'].replace(/px/g,'')) + trans_x + 'px';
+			    } else {
+				    element.style['top'] = trans_y + 'px';
+    			}
+	    	}
+	    }
     }
 }
 
