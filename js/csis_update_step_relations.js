@@ -30,32 +30,27 @@
         // deactivate other buttons, so that only one AJAX request is being handled at a time (prevent problems with interferences)
         $('span.update-step-relations').attr('disabled', 'disabled');
 
-        // only necessary if this functionality will be used for other content types as well
-        if (targetType == "twin" || targetType == "showcase" || targetType == "adaptation_options") {
-          var elUUID = $(this).attr('data-uuid');
-          var elID = $(this).attr('data-camera-target');
-          console.log("GL-step UUID: " + stepUUID);
-          console.log(targetType + " UUID: " + elUUID);
+        var elUUID = $(this).attr('data-uuid');
+        var elID = $(this).attr('data-camera-target');
+        console.log("GL-step UUID: " + stepUUID);
+        console.log(targetType + " UUID: " + elUUID);
 
-          // create payload with step-relation  (type -> node type, id -> node UUID)
-          var postData = { 'data': [{ 'type': 'node--' + targetType, 'id': elUUID }] };
+        // create payload with step-relation  (type -> node type, id -> node UUID)
+        var postData = { 'data': [{ 'type': 'node--' + targetType, 'id': elUUID }] };
 
-          getCsrfToken(function (csrfToken) {
-            updateRelationForStep(csrfToken, action, stepUUID, elUUID, postData);
-          });
+        getCsrfToken(function (csrfToken) {
+          updateRelationForStep(csrfToken, action, stepUUID, elUUID, postData);
+        });
 
-          // remove Twin-Div if in Summary-tab
-          if (action == "delete") {
-            $('div[data-history-node-id="' + elID + '"]').remove();
-          }
-
-          // replace button with css loading-animation
-          $(this).hide();
-          $(this).after('<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>');
+        // remove Twin-Div if in Summary-tab
+        if (action == "delete") {
+          $('div[data-history-node-id="' + elID + '"]').remove();
         }
-        else {
-          console.log(targetType + " content type is currently not supported for this feature");
-        }
+
+        // replace button with css loading-animation
+        $(this).hide();
+        $(this).after('<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>');
+
       });
 
     }
@@ -96,6 +91,10 @@ function updateRelationForStep(csrfToken, action, stepUUID, twinUUID, postData) 
       // once AJAX-request is done re-activate buttons
       jQuery('span.update-step-relations').removeAttr("disabled");
       updateView();
+    },
+    error: function (xhr, textStatus, error) {
+      console.log("Error updating GL-step relationship:");
+      console.log(xhr.responseJSON);
     }
   });
 }
