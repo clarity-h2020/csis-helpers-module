@@ -42,7 +42,6 @@ class EmikatHelperFunctions {
       $calcMethodID = $calcMethodTerm->get("field_calculation_method_id")->value;
       //dump($calcMethodID);
     }
-    //exit(1);
 
 
     /*
@@ -64,8 +63,6 @@ class EmikatHelperFunctions {
     }
 
     $studyType = Term::load($entity->get('field_study_type')->target_id);
-    dump($studyType);
-    exit(1);
 
     // check relevant fields and set status
     if ($entity->label() != $entity->original->label()) {
