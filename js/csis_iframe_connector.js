@@ -142,8 +142,11 @@
                 return;
             }
 
+             // window.location.origin instead of window.location.host: we need the protocol, too!
+             var host = window.location.origin;
+
             /**
-             * Base map component URL
+             * Base table component URL
              * 
              * @type {String}
              */
