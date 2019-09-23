@@ -100,7 +100,6 @@ var groupContentTemplate = {
         // if we are not in a Gl-step, we need to follow another approach
         // in a third REST call the group content for the Report image needs to be POSTed
         if (stepID == -1) {
-          console.log("we are in the Study and not the GL-step!!!");
           // remove the relationship between GL-Step and Report Image, since there is no GL-step available
           delete reportImageTemplate.data.relationships.field_source_step;
           // instead prepare the template for the additional POST call
