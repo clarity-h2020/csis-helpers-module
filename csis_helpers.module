@@ -7,6 +7,7 @@ use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupContent;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
+use Drupal\paragraphs\Entity\Paragraph;
 
 /**
  * Disable in production!
@@ -46,6 +47,7 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
       case 'gl_step':
         $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = $entityInfo;
         // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
+        $entityInfo['Warning'] = 'DEPRECATED! Use studyInfo instead';
         $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = $entityInfo;
         break;
       case 'data_package':
@@ -211,10 +213,9 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
   $groupEmikatID = null;
   $datapackageUUID = null;
   $groupArea = null;
-  $groupEaaName = null;
+  $groupEeaName = null;
   $relations = GroupContent::loadByEntity($entity);
-
-  //console_log('creating entity info for study ' . $groupName);
+  $studyPresets = array();
 
   foreach ($relations as $relation) {
     $groupid[] = $relation->getGroup()->id();
@@ -225,6 +226,23 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     $groupDatapackageID = $relation->getGroup()->get('field_data_package')->target_id;
     $groupArea = $relation->getGroup()->get('field_area')->value;
     $groupCityTerm = (!$relation->getGroup()->get('field_city_region')->isEmpty() ? Term::load($relation->getGroup()->get('field_city_region')->target_id) : false);
+
+    // get Study presets (combination of time-period, emission scenario and event frequency) from Paragraph reference
+    foreach ($relation->getGroup()->get('field_study_presets') as $paraReference) {
+      $paragraph = Paragraph::load($paraReference->target_id);
+
+      if ($paragraph and $paragraph->getType() == "variable_set") {
+        // load all the necessary taxonomy terms
+        $termEmScenario = Term::load($paragraph->get('field_emission_scenario')->target_id);
+        $termEventFreq = Term::load($paragraph->get('field_event_frequency')->target_id);
+        $termTimePeriod = Term::load($paragraph->get('field_time_period')->target_id);
+
+        // extract needed values from those terms
+        $studyPresets['time_period'] = $termTimePeriod->get('field_var_meaning')->value;
+        $studyPresets['emission_scenario'] = $termEmScenario->get('field_var_meaning')->value;
+        $studyPresets['event_frequency'] = $termEventFreq->get('field_var_meaning')->value;
+      }
+    }
 
     if ($groupDatapackageID) {
       $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
@@ -253,6 +271,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     'study_datapackage_uuid' => $datapackageUUID,
     'study_area' => $groupArea,
     'eea_city_name' => $groupEeaName,
+    'study_presets' => $studyPresets,
     'write_permissions' => ($has_user_special_roles ? 0 : 1),
   );
   return $studyEntityInfo;
