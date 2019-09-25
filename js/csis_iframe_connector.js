@@ -47,17 +47,20 @@
                 study_area = csisHelpers.datapackageInfo.spatial_extent;
                 write_permissions = csisHelpers.datapackageInfo.write_permissions;
             } else if (undefined !== csisHelpers.studyInfo) { // implicitly use for study preview map
-                console.info(`showing ${appType} for study ${csisHelpers.studyInfo.name}`);
+                console.info(`showing ${appType} for study ${csisHelpers.studyInfo.name} (${csisHelpers.studyInfo.uuid})`);
                 study_uuid = csisHelpers.studyInfo.uuid;
                 study_area = csisHelpers.studyInfo.study_area;
                 emikat_id = csisHelpers.studyInfo.study_emikat_id;
                 datapackage_uuid = csisHelpers.studyInfo.study_datapackage_uuid;
                 write_permissions = csisHelpers.studyInfo.write_permissions;
                 study_variant = csisHelpers.studyInfo.study_variant;
-                time_period = csisHelpers.studyInfo.time_period;
-                emission_scenario = csisHelpers.studyInfo.emission_scenario;
-                event_frequency = csisHelpers.studyInfo.event_frequency;
-
+                if(undefined !== csisHelpers.studyInfo.studyPresets && null !== csisHelpers.studyInfo.studyPresets) {
+                    time_period = csisHelpers.studyPresets.studyInfo.time_period;
+                    emission_scenario = csisHelpers.studyPresets.studyInfo.emission_scenario;
+                    event_frequency = csisHelpers.studyPresets.studyInfo.event_frequency;
+                } else {
+                    console.warn(`no studyPresets found in study ${csisHelpers.studyInfo.name} (${csisHelpers.studyInfo.uuid})`);
+                }
             } else if (undefined !== csisHelpers.entityinfo) { // DEPRECATED!
                 console.warn(`showing ${appType} for study ${csisHelpers.entityinfo.study_uuid} for **deprecated** drupalSettings.csisHelpers.entityinfo`);
                 study_uuid = csisHelpers.entityinfo.study_uuid;
