@@ -135,7 +135,12 @@ var groupContentTemplate = {
             elementToPrint = elementToPrint.getElementById('#map');
             replaceTranslate3dStyle(elementToPrint);
           } else if (iframeFound) {
-            elementToPrint = elementToPrint.body.getElementsByClassName('container ng-scope')[0];
+            if (elementToPrint.body.getElementsByClassName('container ng-scope')[0] != null) {
+              elementToPrint = elementToPrint.body.getElementsByClassName('container ng-scope')[0];
+            } else {
+              elementToPrint = elementToPrint.getElementById('root');
+              replaceTranslate3dStyle(elementToPrint);
+            }
           } else if (elementToPrint.getElementsByClassName('leaflet-tile') != null && elementToPrint.getElementsByClassName('leaflet-tile').length > 0) {
             replaceTranslate3dStyle(elementToPrint);
           }
@@ -173,25 +178,28 @@ function replaceTranslate3dStyleByElement(element) {
   if (element.style != null) {
     var transformStyle = element.style['transform'];
 
-    if (transformStyle != null) {
-      var trans_val = transformStyle.replace('translate3d', '').replace(/px/g, '').replace('(', '').replace(')', '').split(',');
-      var trans_y = parseInt(trans_val[trans_val.length - 2]),
-        trans_x = parseInt(trans_val[trans_val.length - 3]);
+      if (transformStyle != null && transformStyle != "") {
+      var trans_val = transformStyle.replace('translate3d','').replace(/px/g,'').replace('(','').replace(')','').split(',');
+      var trans_y = parseInt(trans_val[trans_val.length - 2]) ,
+          trans_x = parseInt(trans_val[trans_val.length - 3]);
 
-      if (trans_y < 0 || trans_x < 0) {
-        element.style['transform'] = 'translate3d(0px,0px,0px)';
-        if (element.style['left'] != null && element.style['left'] != "" && element.style['left'].indexOf('px') != -1) {
-          element.style['left'] = parseInt(element.style['left'].replace(/px/g, '')) + trans_x + 'px';
-        } else {
-          element.style['left'] = trans_x + 'px';
-        }
+          element.style['transform'] = 'translate3d(0px,0px,0px)';
+          if (element.style['left'] != null && element.style['left']  != "" && element.style['left'].indexOf('px') != -1) {
+                  element.style['left'] = parseInt(element.style['left'].replace(/px/g,'')) + trans_x + 'px';
+          } else {
+                  element.style['left'] = trans_x + 'px';
+          }
 
-        if (element.style['top'] != null && element.style['top'] != "" && element.style['top'].indexOf('px') != -1) {
-          element.style['top'] = parseInt(element.style['top'].replace(/px/g, '')) + trans_x + 'px';
-        } else {
-          element.style['top'] = trans_y + 'px';
-        }
-      }
+          if (element.style['opacity'] != null && element.style['opacity']  != "" && parseFloat(element.style['opacity']) != NaN) {
+		        if (parseFloat(element.style['opacity']) == 0.0) {
+			        element.style['visibility'] = 'hidden';
+		        }
+          }
+          if (element.style['top'] != null && element.style['top']  != "" && element.style['top'].indexOf('px') != -1) {
+                  element.style['top'] = parseInt(element.style['top'].replace(/px/g,'')) + trans_x + 'px';
+          } else {
+              element.style['top'] = trans_y + 'px';
+          }
     }
   }
 }
