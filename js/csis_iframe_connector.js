@@ -54,12 +54,12 @@
                 datapackage_uuid = csisHelpers.studyInfo.study_datapackage_uuid;
                 write_permissions = csisHelpers.studyInfo.write_permissions;
                 study_variant = csisHelpers.studyInfo.study_variant;
-                if(undefined !== csisHelpers.studyInfo.studyPresets && null !== csisHelpers.studyInfo.studyPresets) {
-                    time_period = csisHelpers.studyPresets.studyInfo.time_period;
-                    emission_scenario = csisHelpers.studyPresets.studyInfo.emission_scenario;
-                    event_frequency = csisHelpers.studyPresets.studyInfo.event_frequency;
+                if(undefined !== csisHelpers.studyInfo.study_presets && null !== csisHelpers.studyInfo.study_presets) {
+                    time_period = csisHelpers.study_presets.studyInfo.time_period;
+                    emission_scenario = csisHelpers.study_presets.studyInfo.emission_scenario;
+                    event_frequency = csisHelpers.study_presets.studyInfo.event_frequency;
                 } else {
-                    console.warn(`no studyPresets found in study ${csisHelpers.studyInfo.name} (${csisHelpers.studyInfo.uuid})`);
+                    console.warn(`no study_presets found in study ${csisHelpers.studyInfo.name} (${csisHelpers.studyInfo.uuid})`);
                 }
             } else if (undefined !== csisHelpers.entityinfo) { // DEPRECATED!
                 console.warn(`showing ${appType} for study ${csisHelpers.entityinfo.study_uuid} for **deprecated** drupalSettings.csisHelpers.entityinfo`);
