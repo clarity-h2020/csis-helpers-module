@@ -54,10 +54,10 @@
                 datapackage_uuid = csisHelpers.studyInfo.study_datapackage_uuid;
                 write_permissions = csisHelpers.studyInfo.write_permissions;
                 if(undefined !== csisHelpers.studyInfo.study_presets && null !== csisHelpers.studyInfo.study_presets) {
-                    time_period = csisHelpers.studyInfo.study_presets.studyInfo.time_period;
-                    emission_scenario = csisHelpers.studyInfo.study_presets.studyInfo.emission_scenario;
-                    event_frequency = csisHelpers.studyInfo.study_presets.studyInfo.event_frequency;
-                    study_variant = csisHelpers.studyInfo.study_presets.studyInfo.study_variant;
+                    time_period = csisHelpers.studyInfo.study_presets.time_period;
+                    emission_scenario = csisHelpers.studyInfo.study_presets.emission_scenario;
+                    event_frequency = csisHelpers.studyInfo.study_presets.event_frequency;
+                    study_variant = csisHelpers.studyInfo.study_presets.study_variant;
                 } else {
                     console.warn(`no study_presets found in study ${csisHelpers.studyInfo.name} (${csisHelpers.studyInfo.uuid})`);
                 }
