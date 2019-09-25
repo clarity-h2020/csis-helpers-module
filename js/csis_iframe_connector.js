@@ -26,7 +26,7 @@
         if (undefined !== drupalSettings && undefined !== drupalSettings.csisHelpers) {
             var csisHelpers = drupalSettings.csisHelpers;
             var study_uuid, study_area, emikat_id, datapackage_uuid,
-                write_permissions, resource_uuid, minx, miny, maxx, maxy, study_variant, time_period, emission_scenario, event_frequency;
+                write_permissions, resource_uuid, study_variant, time_period, emission_scenario, event_frequency;
 
             if (undefined !== csisHelpers.resourceInfo && appType == 'ResourcePreviewMap') {
                 console.info(`showing ${appType} for resource ${csisHelpers.resourceInfo.name}`);
@@ -35,10 +35,6 @@
                 // handling of initial bbox just because the data model contains rubbish. :-/
                 // See https://github.com/clarity-h2020/map-component/issues/53
                 study_area = csisHelpers.resourceInfo.spatial_extent;
-                //minx = csisHelpers.resourceInfo.minx;
-                //miny = csisHelpers.resourceInfo.miny;
-                //maxx = csisHelpers.resourceInfo.maxx;
-                //maxy = csisHelpers.resourceInfo.maxy;
                 write_permissions = csisHelpers.resourceInfo.write_permissions;
             }
             else if (undefined !== csisHelpers.datapackageInfo && appType == 'DataPackagePreviewMap') {
@@ -78,10 +74,6 @@
             iFrameUrl += datapackage_uuid ? `&datapackage_uuid=${datapackage_uuid}` : '';
             iFrameUrl += write_permissions ? `&write_permissions=${write_permissions}` : '';
             iFrameUrl += resource_uuid ? `&resource_uuid=${resource_uuid}` : '';
-            iFrameUrl += minx ? `&minx=${minx}` : '';
-            iFrameUrl += miny ? `&miny=${miny}` : '';
-            iFrameUrl += maxx ? `&maxx=${maxx}` : '';
-            iFrameUrl += maxy ? `&maxy=${maxy}` : '';
             iFrameUrl += study_variant ? `&maxy=${study_variant}` : '';
             iFrameUrl += time_period ? `&maxy=${time_period}` : '';
             iFrameUrl += emission_scenario ? `&maxy=${emission_scenario}` : '';
