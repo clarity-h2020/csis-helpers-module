@@ -196,8 +196,8 @@ function replaceTranslate3dStyleByElement(element) {
             element.style['top'] = trans_y + 'px';
         }
     }
-    if (element.style['opacity'] != null && element.style['opacity']  != "" && parseFloat(element.style['opacity']) != NaN) {
-      if (parseFloat(element.style['opacity']) == 0.0) {
+    if (getComputedStyle(element)['opacity'] != null && getComputedStyle(element)['opacity'] != "" && parseFloat(getComputedStyle(element)['opacity']) != NaN) {
+      if (parseFloat(getComputedStyle(element)['opacity']) == 0.0) {
         element.style['visibility'] = 'hidden';
       }
     }
