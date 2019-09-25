@@ -74,10 +74,10 @@
             iFrameUrl += datapackage_uuid ? `&datapackage_uuid=${datapackage_uuid}` : '';
             iFrameUrl += write_permissions ? `&write_permissions=${write_permissions}` : '';
             iFrameUrl += resource_uuid ? `&resource_uuid=${resource_uuid}` : '';
-            iFrameUrl += study_variant ? `&maxy=${study_variant}` : '';
-            iFrameUrl += time_period ? `&maxy=${time_period}` : '';
-            iFrameUrl += emission_scenario ? `&maxy=${emission_scenario}` : '';
-            iFrameUrl += event_frequency ? `&maxy=${event_frequency}` : '';
+            iFrameUrl += study_variant ? `&study_variant=${study_variant}` : '';
+            iFrameUrl += time_period ? `&time_period=${time_period}` : '';
+            iFrameUrl += emission_scenario ? `&emission_scenario=${emission_scenario}` : '';
+            iFrameUrl += event_frequency ? `&event_frequency=${event_frequency}` : '';
         } else {
             console.error('no global csisHelpers object found, probably not connected to Drupal!')
         }
