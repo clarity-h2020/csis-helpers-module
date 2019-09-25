@@ -36,6 +36,15 @@ The steps of a Study should be done in a predefined order, so it is necessary to
 ### Communication with Emikat
 This module checks each time a Study gets updated if Emikat is aware of this Study or not. In case Emikat is already aware of this Study, the CSIS received an EmikatID as a response, which is stored inside the Study.
 
+The initial triggering of Emikat happens only after all relevant (relevant for Emikat, ongoing discussion here: https://github.com/clarity-h2020/emikat/issues/6) fields in the Study are set. As of now the following fields are considered relevant:
+- Study title
+- Study goal
+- Study area
+- Country code and city
+- used data package
+
+Emikat is notified of changes in the Study only when these relevant fields are changed. 
+
 ### Modifications for Entity browsers
 There are two libraies in this module which you can attach to a view entity browser display of a view.
 - `entitybrowser_helpers`: this attaches a javascript to the entity browser which implements a single selection behavior. ON selection of an element all othe selected elements get unselected
