@@ -49,7 +49,7 @@
                 emikat_id = csisHelpers.studyInfo.study_emikat_id;
                 datapackage_uuid = csisHelpers.studyInfo.study_datapackage_uuid;
                 write_permissions = csisHelpers.studyInfo.write_permissions;
-                if(undefined !== csisHelpers.studyInfo.study_presets && null !== csisHelpers.studyInfo.study_presets) {
+                if (undefined !== csisHelpers.studyInfo.study_presets && null !== csisHelpers.studyInfo.study_presets) {
                     time_period = csisHelpers.studyInfo.study_presets.time_period;
                     emission_scenario = csisHelpers.studyInfo.study_presets.emission_scenario;
                     event_frequency = csisHelpers.studyInfo.study_presets.event_frequency;
@@ -137,8 +137,8 @@
                 return;
             }
 
-             // window.location.origin instead of window.location.host: we need the protocol, too!
-             var host = window.location.origin;
+            // window.location.origin instead of window.location.host: we need the protocol, too!
+            var host = window.location.origin;
 
             /**
              * Base table component URL
@@ -151,6 +151,42 @@
 
             console.debug(`initilizing iFrame with ${tableComponentUrl}`);
             iFrameTableComponent.setAttribute('src', tableComponentUrl);
+        }
+        catch (undefinedError) {
+            console.error('no global drupalSettings object found, probably not connected to Drupal!', undefinedError);
+        }
+    }
+
+    /**
+     * Initialise EEA's Urban Adaptation Viewer with EEA Citiy Profile. Works only for screening studies **and** when an EEA City Profile is available for
+     * the selected city from the cities taxonomy!
+     * 
+     * @param {HTMLElement} urbanAdaptationViewer 
+     */
+    drupalSettings.csisHelpers.initUrbanAdaptationViewer = function initUrbanAdaptationViewer(urbanAdaptationViewer = document.getElementById('urban-adaptation-viewer')) {
+        try {
+            if (undefined == urbanAdaptationViewer || null == urbanAdaptationViewer) {
+                console.warn('initUrbanAdaptationViewer(): no urbanAdaptationViewer HTML Element (urban-adaptation-viewer) available');
+                return;
+            }
+
+            if (undefined !== drupalSettings && undefined !== drupalSettings.csisHelpers && undefined !== csisHelpers.studyInfo
+                && undefined !== csisHelpers.studyInfo.eea_city_name && null !== csisHelpers.studyInfo.eea_city_name) {
+                /**
+             * Base table component URL
+             * 
+             * @type {String}
+             */
+                var urbanAdaptationViewerUrl = 'https://tableau.discomap.eea.europa.eu/t/Aironline/views/2019_Urban_vulnerability_links/mainpage?iframeSizedToWindow=false&%3Aembed=y&%3AshowAppBanner=false&%3Adisplay_count=yes&%3AshowVizHome=yes&%3Atoolbar=yes&City_param=';
+                console.debug(`initilizing iFrame with ${urbanAdaptationViewerUrl}`);
+                urbanAdaptationViewerUrl += csisHelpers.studyInfo.eea_city_name;
+                urbanAdaptationViewer.setAttribute('src', urbanAdaptationViewerUrl);
+            } else {
+                console.warn(`no EEA city name available for study, cannot initialise Urban Adaptation Viewer`);
+                if (urbanAdaptationViewer.outerHTML) {
+                    urbanAdaptationViewer.outerHTML = '<h1>Sorry, this study area is not supported by EEA\'s UrbanAdaptationViewer!';
+                }
+            }
         }
         catch (undefinedError) {
             console.error('no global drupalSettings object found, probably not connected to Drupal!', undefinedError);
