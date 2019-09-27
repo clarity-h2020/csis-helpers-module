@@ -129,13 +129,13 @@ class EmikatHelperFunctions {
       " \nCSIS_COUNTRY_CODE: " . $countryCode .
       " \nCSIS_CITY: " . $city;
 
-    // let Emikat know whether the changes in the Study require a recalculation (only needed in POST request)
+    // let Emikat know whether the changes in the Study require a recalculation (only used in POST requests, since PUT sends new Studies)
     $forceRecalculate = false;
     if ($statusCode == 2) {
       $forceRecalculate = true;
     }
 
-    // if no emikatID -> Study not yet existant in Emikat -> send new Study via PUT (otherwise update existing one via POST)
+    // ---------- PUT request with new Study ----------
     if (!$emikatID) {
       //create payload
       $payload = json_encode(
@@ -145,11 +145,12 @@ class EmikatHelperFunctions {
           "status" => "AKT"
         )
       );
-      $emikatID = $this->sendPutRequest($payload, $auth);
-      //$emikatID = 1234;
+      $emikatID = $this->sendPutRequest($payload, $auth, $studyID);
       // store the given ID from Emikat
       $entity->set("field_emikat_id", $emikatID);
     }
+    // -----------------------------------------------------
+    // ---------- POST request with updated Study ----------
     else {
       // emikatID already exists -> current Study needs to be updated via POST
       $payload = json_encode(
@@ -160,9 +161,19 @@ class EmikatHelperFunctions {
           "forceRecalculate" => $forceRecalculate
         )
       );
-      $this->sendPostRequest($payload, $auth, $emikatID);
+      $success = $this->sendPostRequest($payload, $auth, $emikatID);
+
+      if ($success) {
+        // generate status messages for FE and BE
+        \Drupal::logger('EmikatHelperFunctions')->notice(
+          "Emikat was notified via POST of updates in Study " . $studyID
+          . " with Recalculate flag set to: " . var_export($forceRecalculate, true)
+        );
+        $this->result['message'] = "Emikat was notified of updates in Study with Recalculate flag set to: " . var_export($forceRecalculate, true);
+      }
     }
 
+    // return a message that will be shown to admins and developers directly in FE
     return $this->result;
   }
 
@@ -173,7 +184,7 @@ class EmikatHelperFunctions {
    * @param [JSON] $payload
    * @return String with Emikat-internal ID of the Study
    */
-  private function sendPutRequest($payload, $auth) {
+  private function sendPutRequest($payload, $auth, $studyID) {
     $client = \Drupal::httpClient();
     $emikatID = "";
 
@@ -181,7 +192,7 @@ class EmikatHelperFunctions {
       $request = $client->put(
         "https://service.emikat.at/EmiKatTst/api/scenarios",
         array(
-          'auth' => ['username', 'password'],
+          'auth' => $auth,
           'headers' => array(
             'Content-type' => 'application/json',
           ),
@@ -193,8 +204,10 @@ class EmikatHelperFunctions {
       //dump($response);
       $emikatID = $response["id"];
       \Drupal::logger('EmikatHelperFunctions')->notice("Emikat was notified via PUT of new Study " . $studyID);
-      $this->result['message'] = "Emikat was notified for the first time of new Study.";
+      $this->result['message'] = "Initial notification of a new Study was sent Emikat.";
+
     } catch (RequestException $e) {
+      // generate error messages for BE and FE
       \Drupal::logger('EmikatHelperFunctions')->error(
         "PUT Request to Emikat returned an error: %error",
         array(
@@ -215,7 +228,7 @@ class EmikatHelperFunctions {
    * @param [JSON] $payload
    * @param [array] $auth
    * @param [string] $emikatID
-   * @return boolean true if request returned no error, false otherwise
+   * @return boolean true if request was successful, false otherwise
    */
   private function sendPostRequest($payload, $auth, $emikatID) {
     $success = true;
@@ -225,7 +238,7 @@ class EmikatHelperFunctions {
       $request = $client->post(
         "https://service.emikat.at/EmiKatTst/api/scenarios/" . $emikatID,
         array(
-          ['username', 'password'],
+          'auth' => $auth,
           'headers' => array(
             'Content-type' => 'application/json',
           ),
@@ -236,8 +249,9 @@ class EmikatHelperFunctions {
       $response = json_decode($request->getBody()->getContents());
 
     } catch (RequestException $e) {
+      // generate error messages for BE and FE and set $success to false
       \Drupal::logger('EmikatHelperFunctions')->error(
-        "Post Request to Emikat returned an error: %error",
+        "POST Request to Emikat returned an error: %error",
         array(
           '%error' => $e->getMessage(),
         )
