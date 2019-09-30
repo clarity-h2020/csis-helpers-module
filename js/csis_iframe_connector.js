@@ -170,8 +170,8 @@
                 return;
             }
 
-            if (undefined !== drupalSettings && undefined !== drupalSettings.csisHelpers && undefined !== csisHelpers.studyInfo
-                && undefined !== csisHelpers.studyInfo.eea_city_name && null !== csisHelpers.studyInfo.eea_city_name) {
+            if (undefined !== drupalSettings && undefined !== drupalSettings.csisHelpers && undefined !== drupalSettings.csisHelpers.studyInfo
+                && undefined !== drupalSettings.csisHelpers.studyInfo.eea_city_name && null !== drupalSettings.csisHelpers.studyInfo.eea_city_name) {
                 /**
              * Base table component URL
              * 
@@ -179,12 +179,14 @@
              */
                 var urbanAdaptationViewerUrl = 'https://tableau.discomap.eea.europa.eu/t/Aironline/views/2019_Urban_vulnerability_links/mainpage?iframeSizedToWindow=false&%3Aembed=y&%3AshowAppBanner=false&%3Adisplay_count=yes&%3AshowVizHome=yes&%3Atoolbar=yes&City_param=';
                 console.debug(`initilizing iFrame with ${urbanAdaptationViewerUrl}`);
-                urbanAdaptationViewerUrl += csisHelpers.studyInfo.eea_city_name;
+                urbanAdaptationViewerUrl += drupalSettings.csisHelpers.studyInfo.eea_city_name;
                 urbanAdaptationViewer.setAttribute('src', urbanAdaptationViewerUrl);
             } else {
                 console.warn(`no EEA city name available for study, cannot initialise Urban Adaptation Viewer`);
                 if (urbanAdaptationViewer.outerHTML) {
                     urbanAdaptationViewer.outerHTML = '<h1>Sorry, this study area is not supported by EEA\'s UrbanAdaptationViewer!';
+                } else {
+                    console.warn('urbanAdaptationViewer.outerHTML() mot available');
                 }
             }
         }
