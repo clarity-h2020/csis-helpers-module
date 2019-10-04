@@ -76,7 +76,7 @@
             iFrameUrl += resource_uuid ? `&resource_uuid=${resource_uuid}` : '';
             iFrameUrl += study_variant ? `&study_variant=${study_variant}` : '';
             iFrameUrl += time_period ? `&time_period=${time_period}` : '';
-            iFrameUrl += emission_scenario ? `&emission_scenario=${emission_scenario}` : '';
+            iFrameUrl += emission_scenario ? `&emissions_scenario=${emission_scenario}` : '';
             iFrameUrl += event_frequency ? `&event_frequency=${event_frequency}` : '';
         } else {
             console.error('no global csisHelpers object found, probably not connected to Drupal!')
