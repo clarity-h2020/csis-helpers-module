@@ -64,10 +64,12 @@ var groupContentTemplate = {
   Drupal.behaviors.csis_include_in_report = {
     attach: function (context, settings) {
       $('.snapshot', context).once("include_in_report").on('click', function (event) {
-        console.debug('inlcude in report button pressed');
+        console.debug('include in report button pressed');
+
         // hide "Include in Report button and show loading animation
-        $(this).hide();
-        $(this).parent().after('<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>');
+        var btnElement = $(this);
+        btnElement.hide();
+        btnElement.parent().after('<div id="lds-spinner-1" class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>');
 
         var iframeFound = false;
         var targetNid = $(this).attr('data-camera-target'); // not used anymore, so data-camera-target not needed anymore?
@@ -81,7 +83,7 @@ var groupContentTemplate = {
           iframeFound = true;
           console.debug('detected extended iFrame: ' + targetElement);
         } else {
-          console.warn('sorry, no inlcude in report element  found!');
+          console.warn('sorry, no include in report element  found!');
           return;
         }
 
@@ -95,7 +97,6 @@ var groupContentTemplate = {
         // update Report Image template
         reportImageTemplate.data.attributes.title = "Report Image for Study " + studyID + " Step " + stepID;
         reportImageTemplate.data.attributes.field_comment.value = autoComment;
-        reportImageTemplate.data.relationships.field_source_step.data.id = stepUUID;
 
         // if we are not in a Gl-step, we need to follow another approach
         // in a third REST call the group content for the Report image needs to be POSTed
@@ -105,6 +106,9 @@ var groupContentTemplate = {
           // instead prepare the template for the additional POST call
           reportImageTemplate.data.attributes.title = "Report Image for Study " + studyID;
           groupContentTemplate.data.relationships.gid.data.id = studyUUID;
+        }
+        else {
+          reportImageTemplate.data.relationships.field_source_step.data.id = stepUUID;
         }
 
         // set Category field of Report image, which is determined by the taxonomy termIDs of taxonomy "report image category"
@@ -148,7 +152,7 @@ var groupContentTemplate = {
           html2canvas(elementToPrint, { useCORS: true, allowTaint: false, async: false, logging: false, foreignObjectRendering: false }).then(canvas => {
             canvas.toBlob(function (blob) {
               getCsrfToken(function (csrfToken) {
-                postScreenshotFile(csrfToken, stepUUID, blob, imageName);
+                postScreenshotFile(csrfToken, stepUUID, blob, imageName, btnElement);
               });
             });
           });
@@ -214,7 +218,7 @@ function getCsrfToken(callback) {
 }
 
 
-function postScreenshotFile(csrfToken, stepUUID, canvas, imageName) {
+function postScreenshotFile(csrfToken, stepUUID, canvas, imageName, btnElement) {
   jQuery.ajax({
     url: "/jsonapi/node/report_image/field_image",
     method: "POST",
@@ -231,7 +235,7 @@ function postScreenshotFile(csrfToken, stepUUID, canvas, imageName) {
     success: function (data, status, xhr) {
       var fileUUID = data.data.id;
       console.log("successfully posted new file " + fileUUID);
-      postReportImage(csrfToken, stepUUID, fileUUID);
+      postReportImage(csrfToken, stepUUID, fileUUID, btnElement);
     },
     error: function (xhr, textStatus, error) {
       console.log("Error posting Screenshot file");
@@ -241,7 +245,7 @@ function postScreenshotFile(csrfToken, stepUUID, canvas, imageName) {
 }
 
 
-function postReportImage(csrfToken, stepUUID, fileUUID) {
+function postReportImage(csrfToken, stepUUID, fileUUID, btnElement) {
   // fill Report Image template with correct data
   reportImageTemplate.data.relationships.field_image.data.id = fileUUID;
 
@@ -268,7 +272,7 @@ function postReportImage(csrfToken, stepUUID, fileUUID) {
       }
 
       // open Edit form for the new Report Image
-      openEditForm(reportImageNID);
+      openEditForm(reportImageNID, btnElement);
     },
     error: function (xhr, textStatus, error) {
       console.log("Error posting Report Image");
@@ -336,16 +340,22 @@ function postReportImageGroupContent(csrfToken, stepUUID, reportImageUUID, repor
 }
 
 
-function openEditForm(reportImageNID) {
+function openEditForm(reportImageNID, btnElement) {
+
+  // create and click a button that will open the edit-form in a modal
   var currentPath = window.location.pathname;
   var link = jQuery('<a>');
   link.addClass('use-ajax btn btn-sm btn-default');
   link.attr('href', '/node/' + reportImageNID + '/edit?destination=' + currentPath);
   link.attr('data-dialog-options', '{"width":"80%", "dialogClass":"report-image-edit-form"}');
-  link.attr('data-dialog-type', 'dialog');
+  link.attr('data-dialog-type', 'modal');
   link.attr('id', 'report-image-edit-link');
   link.text('edit comment');
   jQuery('.snapshot').append(link); // append link-element to something, otherwise attachBehaviors() has no effect
   Drupal.attachBehaviors(); // necessary for binding "use-ajax" class to the onclick-handler
-  jQuery('#report-image-edit-link').click();
+  jQuery('#report-image-edit-link').click().remove();
+
+  // display "Include in report" button again and remove loading animation
+  btnElement.show();
+  jQuery('#lds-spinner-1').remove();
 }
