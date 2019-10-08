@@ -128,6 +128,8 @@ var groupContentTemplate = {
             elementToPrint = elementToPrint.contentDocument;
           }
 
+          var isScenarioInChrome = false;
+
           if (iframeFound && elementToPrint.getElementById('#map') != null) {
             // a leaflet map was found
             // the css property translate cannot be handled properly by html2canvas, if negative values are used and that is the case, if overlay layers are used.
@@ -137,6 +139,7 @@ var groupContentTemplate = {
           } else if (iframeFound) {
             if (elementToPrint.body.getElementsByClassName('container ng-scope')[0] != null) {
               elementToPrint = elementToPrint.body.getElementsByClassName('container ng-scope')[0];
+              isScenarioInChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
             } else {
               elementToPrint = elementToPrint.getElementById('root');
               replaceTranslate3dStyle(elementToPrint);
@@ -145,7 +148,7 @@ var groupContentTemplate = {
             replaceTranslate3dStyle(elementToPrint);
           }
 
-          html2canvas(elementToPrint, { useCORS: true, allowTaint: false, async: false, logging: false, foreignObjectRendering: false }).then(canvas => {
+          html2canvas(elementToPrint, { useCORS: true, allowTaint: false, async: false, logging: false, foreignObjectRendering: isScenarioInChrome }).then(canvas => {
             canvas.toBlob(function (blob) {
               getCsrfToken(function (csrfToken) {
                 postScreenshotFile(csrfToken, stepUUID, blob, imageName);
