@@ -51,9 +51,11 @@ include_in_report:
     js/csis_include_in_report.js:
   dependencies:
     - core/jquery
+    - core/jquery.form
     - core/jquery.once
     - core/drupal
     - core/drupal.ajax
+    - core/drupal.dialog.ajax,
     - core/drupalSettings
 
 html2canvas:

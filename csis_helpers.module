@@ -3,6 +3,10 @@
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\CloseModalDialogCommand;
+use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupContent;
 use Drupal\node\Entity\Node;
@@ -79,6 +83,16 @@ function csis_helpers_form_node_form_alter(&$form, $form_state, $form_id)
   $entity = $form_state->GetFormObject()->getEntity();
   if ($entity->id()) {
     $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
+  }
+
+  // prevent page-reload /redirect for the edit-form of Report images (unless user is on the summary page)
+  if ($form_id == "node_report_image_edit_form" && \Drupal::request()->query->has('destination')) {
+    $pathComponents = explode("/", \Drupal::request()->query->get('destination'));
+    $lastPathComponent = end($pathComponents);
+    if ($lastPathComponent != "summary") {
+      $form['actions']['submit']['#submit'][] = '_csis_helpers_ajax_submit';
+      $form['actions']['submit']['#attributes']['class'][] = 'use-ajax-submit';
+    }
   }
 }
 
@@ -419,6 +433,21 @@ function csis_helpers_jsonapi_entity_filter_access(\Drupal\Core\Entity\EntityTyp
   return ([
     JSONAPI_FILTER_AMONG_ALL => AccessResult::allowed(),
   ]);
+}
+
+/**
+ * Close the Modal and prevent redirect or page reload.
+ *
+ * @param array $form
+ *   The form that will be altered.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   FormState Object.
+ */
+function _csis_helpers_ajax_submit(array $form, FormStateInterface &$form_state)
+{
+  $response = new AjaxResponse();
+  $response->addCommand(new CloseModalDialogCommand());
+  $form_state->setResponse($response);
 }
 
 /**
