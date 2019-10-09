@@ -139,20 +139,23 @@ var groupContentTemplate = {
             // the css property translate cannot be handled properly by html2canvas, if negative values are used and that is the case, if overlay layers are used.
             // So replace the translate3d property with the top and left property. It was assumed that the third argument of translate3d is 0px
             elementToPrint = elementToPrint.getElementById('#map');
-            replaceTranslate3dStyle(elementToPrint);
           } else if (iframeFound) {
             if (elementToPrint.body.getElementsByClassName('container ng-scope')[0] != null) {
               elementToPrint = elementToPrint.body.getElementsByClassName('container ng-scope')[0];
               isScenarioInChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
             } else {
               elementToPrint = elementToPrint.getElementById('root');
-              replaceTranslate3dStyle(elementToPrint);
             }
-          } else if (elementToPrint.getElementsByClassName('leaflet-tile') != null && elementToPrint.getElementsByClassName('leaflet-tile').length > 0) {
-            replaceTranslate3dStyle(elementToPrint);
           }
 
-          html2canvas(elementToPrint, { useCORS: true, allowTaint: false, async: false, logging: false, foreignObjectRendering: isScenarioInChrome }).then(canvas => {
+          html2canvas(elementToPrint, { useCORS: true, 
+            allowTaint: false, 
+            async: false, 
+            logging: false, 
+            foreignObjectRendering: isScenarioInChrome,
+            onclone: function(doc) {
+              replaceTranslate3dStyle(doc);
+            } }).then(canvas => {
             canvas.toBlob(function (blob) {
               getCsrfToken(function (csrfToken) {
                 postScreenshotFile(csrfToken, stepUUID, blob, imageName, btnElement);
