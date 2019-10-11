@@ -153,6 +153,7 @@ var groupContentTemplate = {
             async: false, 
             logging: false, 
             foreignObjectRendering: isScenarioInChrome,
+            scale: 2,
             onclone: function(doc) {
               replaceTranslate3dStyle(doc);
             } }).then(canvas => {
