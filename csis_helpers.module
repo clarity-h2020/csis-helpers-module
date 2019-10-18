@@ -233,6 +233,10 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
   $studyPresets = array(); // stores ONLY 1 preset, will be replaced by $studyScenarios
   $studyScenarios = array(); // replacing $studyPresets in the future
 
+  // write-permissions inside a Study need to be checked upon a group-member level and not a user level
+  $user = \Drupal::currentUser();
+  $has_user_special_roles = false;
+
   foreach ($relations as $relation) {
     $groupid[] = $relation->getGroup()->id();
     $groupuuid[] = $relation->getGroup()->uuid();
@@ -242,6 +246,15 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     $groupDatapackageID = $relation->getGroup()->get('field_data_package')->target_id;
     $groupArea = $relation->getGroup()->get('field_area')->value;
     $groupCityTerm = (!$relation->getGroup()->get('field_city_region')->isEmpty() ? Term::load($relation->getGroup()->get('field_city_region')->target_id) : false);
+
+    $memberRoles = $relation->getGroup()->getMember($user)->getRoles();
+    foreach ($memberRoles as $role) {
+      // GL-steps should be writable for owners and team members, but not observers
+      if ($role == "study-owner" || $role == "study-team") {
+        $has_user_special_roles = true;
+        break;
+      }
+    }
 
     // get Study presets (combination of time-period, emission scenario and event frequency) from Paragraph reference
     foreach ($relation->getGroup()->get('field_study_presets') as $paraReference) {
@@ -280,11 +293,6 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
       $groupEeaName = $groupCityTerm->get('field_eea_city_profile_name')->value;
     }
   }
-
-  // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
-  $user = \Drupal::currentUser();
-  // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
-  $has_user_special_roles = empty($user->getRoles(true));
 
   $studyEntityInfo = array(
     'name' => $groupName,
@@ -366,10 +374,19 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
     }
 
 
-    // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
+    // write-permissions inside a Study need to be checked upon a group-member level and not a user level
     $user = \Drupal::currentUser();
-    // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
-    $has_user_special_roles = empty($user->getRoles(true));
+    $has_user_special_roles = false;
+
+    $memberRoles = $entity->getMember($user)->getRoles();
+    foreach ($memberRoles as $role) {
+      // Study group itself should be writable for owners only
+      if ($role == "study-owner") {
+        $has_user_special_roles = true;
+        break;
+      }
+    }
+
     $emikatId = $entity->get('field_emikat_id')->value;
     $emikatId = empty($emikatId) ? -1 : intval($emikatId);
 
