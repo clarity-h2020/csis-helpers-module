@@ -133,6 +133,8 @@ var groupContentTemplate = {
           }
 
           var isScenarioInChrome = false;
+          var imageScale = 2;
+          var imagesToRecover = [];
 
           if (iframeFound && elementToPrint.getElementById('#map') != null) {
             // a leaflet map was found
@@ -143,6 +145,8 @@ var groupContentTemplate = {
             if (elementToPrint.body.getElementsByClassName('container ng-scope')[0] != null) {
               elementToPrint = elementToPrint.body.getElementsByClassName('container ng-scope')[0];
               isScenarioInChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+	            imageScale = 1;
+	            replaceImgSourceWithBase64Encoding(elementToPrint, imagesToRecover);
             } else {
               elementToPrint = elementToPrint.getElementById('root');
             }
@@ -153,13 +157,18 @@ var groupContentTemplate = {
             async: false, 
             logging: false, 
             foreignObjectRendering: isScenarioInChrome,
-            scale: 2,
+	          scale: imageScale,
             onclone: function(doc) {
               replaceTranslate3dStyle(doc);
             } }).then(canvas => {
             canvas.toBlob(function (blob) {
               getCsrfToken(function (csrfToken) {
                 postScreenshotFile(csrfToken, stepUUID, blob, imageName, btnElement);
+		            if (isScenarioInChrome) {
+                  imagesToRecover.forEach(function(element) {
+                    element.image.src = element.src;
+                  });
+                }
               });
             });
           });
@@ -168,6 +177,31 @@ var groupContentTemplate = {
     }
   };
 })(jQuery, Drupal, drupalSettings);
+
+/**
+ * When foreign object rendering is used (MCDA App in chrome), the images will only be rendered,
+ * if they used the base64 source notation
+ */
+function replaceImgSourceWithBase64Encoding(element, imagesToRecover) {
+  var images = element.getElementsByTagName('img');
+  var directory = element.baseURI.split('/').slice(0, -1).join('/');
+  Array.from(images).forEach(function(ele) {
+    imagesToRecover.push({image: ele, src: ele.src});
+
+    if (ele.getAttribute('src') != null && !ele.getAttribute('src').startsWith('http')) {
+      ele.src = directory + '/' + ele.getAttribute('src');
+    }
+
+    var canvas = document.createElement('canvas');
+    canvas.width = ele.width;
+    canvas.height = ele.height;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(ele, 0, 0);
+    var dataURL = canvas.toDataURL('image/png');
+    ele.src = dataURL;
+  });
+}
+
 
 /**
  * Replace the translate3d style of the given element and all children
