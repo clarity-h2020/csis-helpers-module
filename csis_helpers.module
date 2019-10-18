@@ -144,14 +144,14 @@ function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $enti
   // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
   $user = \Drupal::currentUser();
   // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
-  $has_user_special_roles = empty($user->getRoles(true));
+  $has_user_special_roles = !empty($user->getRoles(true));
 
   $nodeEntityInfo = array(
     'id' => $entity->id(),
     'uuid' => $entity->uuid(),
     //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group! title? label? name?
     //'name' => $entity->get('field_name')->value, // inconsistency: no name field in resource, name field in data package used for 'ckan_id'
-    'write_permissions' => ($has_user_special_roles ? 0 : 1),
+    'write_permissions' => ($has_user_special_roles ? 1 : 0),
   );
 
   $type = $entity->bundle();
@@ -247,12 +247,15 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     $groupArea = $relation->getGroup()->get('field_area')->value;
     $groupCityTerm = (!$relation->getGroup()->get('field_city_region')->isEmpty() ? Term::load($relation->getGroup()->get('field_city_region')->target_id) : false);
 
-    $memberRoles = $relation->getGroup()->getMember($user)->getRoles();
-    foreach ($memberRoles as $role) {
-      // GL-steps should be writable for owners and team members, but not observers
-      if ($role == "study-owner" || $role == "study-team") {
-        $has_user_special_roles = true;
-        break;
+    $member = $relation->getGroup()->getMember($user);
+    if ($member) {
+      $memberRoles = $member->getRoles();
+      foreach ($memberRoles as $role) {
+        // GL-steps should be writable for owners and team members, but not observers
+        if ($role->id() == "study-owner" || $role->id() == "study-team") {
+          $has_user_special_roles = true;
+          break;
+        }
       }
     }
 
@@ -308,7 +311,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     'eea_city_name' => $groupEeaName,
     'study_presets' => $studyPresets,
     'study_scenarios' => $studyScenarios,
-    'write_permissions' => ($has_user_special_roles ? 0 : 1),
+    'write_permissions' => ($has_user_special_roles ? 1 : 0),
   );
   return $studyEntityInfo;
 }
@@ -378,12 +381,15 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
     $user = \Drupal::currentUser();
     $has_user_special_roles = false;
 
-    $memberRoles = $entity->getMember($user)->getRoles();
-    foreach ($memberRoles as $role) {
-      // Study group itself should be writable for owners only
-      if ($role == "study-owner") {
-        $has_user_special_roles = true;
-        break;
+    $member = $entity->getMember($user);
+    if ($member) {
+      $memberRoles = $member->getRoles();
+      foreach ($memberRoles as $role) {
+        // Study group itself should be writable for owners only
+        if ($role->id() == "study-owner") {
+          $has_user_special_roles = true;
+          break;
+        }
       }
     }
 
@@ -404,7 +410,7 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
       'eea_city_name' => $eeaName,
       'study_presets' => $studyPresets,
       'study_scenarios' => $studyScenarios,
-      'write_permissions' => ($has_user_special_roles ? 0 : 1),
+      'write_permissions' => ($has_user_special_roles ? 1 : 0),
 
     );
     return $groupEntityInfo;
