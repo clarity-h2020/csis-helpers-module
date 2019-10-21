@@ -72,6 +72,7 @@ function csis_helpers_group_view(array &$build, EntityInterface $entity, EntityV
   // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
   $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($entity);
   $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
+  $build['#attached']['library'][] = 'csis_helpers/permission_control';
 
   $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_group_entity_info($entity);
 }

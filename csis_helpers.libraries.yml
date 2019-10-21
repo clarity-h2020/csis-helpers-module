@@ -87,3 +87,13 @@ update_step_relations:
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings
+
+permission_control:
+  js:
+    js/csis_permission_control.js:
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings
