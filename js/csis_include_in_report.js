@@ -147,6 +147,9 @@ var groupContentTemplate = {
               isScenarioInChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 	            imageScale = 1;
 	            replaceImgSourceWithBase64Encoding(elementToPrint, imagesToRecover);
+            } else if (elementToPrint.getElementById("centeringContainer") != null) {
+              //eaa tool
+              elementToPrint = elementToPrint.getElementById("centeringContainer");
             } else {
               elementToPrint = elementToPrint.getElementById('root');
             }
