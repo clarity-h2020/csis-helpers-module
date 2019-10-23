@@ -143,9 +143,9 @@ function csis_js_alter(&$javascript, \Drupal\Core\Asset\AttachedAssetsInterface 
 function csis_helpers_node_entity_info(\Drupal\Core\Entity\EntityInterface $entity)
 {
   // check if current user has assigned other role than "authenticated", if not -> no write/edit rights
-  $user = \Drupal::currentUser();
+  $userAccount = \Drupal::currentUser();
   // getRoles(TRUE) only returns roles other than "anonymous" and "authenticated"
-  $has_user_special_roles = !empty($user->getRoles(true));
+  $has_user_special_roles = !empty($userAccount->getRoles(true));
 
   $nodeEntityInfo = array(
     'id' => $entity->id(),
@@ -234,9 +234,15 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
   $studyPresets = array(); // stores ONLY 1 preset, will be replaced by $studyScenarios
   $studyScenarios = array(); // replacing $studyPresets in the future
 
-  // write-permissions inside a Study need to be checked upon a group-member level and not a user level
-  $user = \Drupal::currentUser();
+  // write-permissions inside a Study need to be checked upon a group-member level and not on user level
+  $userAccount = \Drupal::currentUser();
+  $user = \Drupal\user\Entity\User::load($userAccount->id());
   $has_user_special_roles = false;
+
+  // bypass member roles permissions for admins
+  if ($user->hasRole("administrator")) {
+    $has_user_special_roles = true;
+  }
 
   foreach ($relations as $relation) {
     $groupid[] = $relation->getGroup()->id();
@@ -248,7 +254,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     $groupArea = $relation->getGroup()->get('field_area')->value;
     $groupCityTerm = (!$relation->getGroup()->get('field_city_region')->isEmpty() ? Term::load($relation->getGroup()->get('field_city_region')->target_id) : false);
 
-    $member = $relation->getGroup()->getMember($user);
+    $member = $relation->getGroup()->getMember($userAccount);
     if ($member) {
       $memberRoles = $member->getRoles();
       foreach ($memberRoles as $role) {
@@ -379,10 +385,16 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
 
 
     // write-permissions inside a Study need to be checked upon a group-member level and not a user level
-    $user = \Drupal::currentUser();
+    $userAccount = \Drupal::currentUser();
+    $user = \Drupal\user\Entity\User::load($userAccount->id());
     $has_user_special_roles = false;
 
-    $member = $entity->getMember($user);
+    // bypass member roles permissions for admins
+    if ($user->hasRole("administrator")) {
+      $has_user_special_roles = true;
+    }
+
+    $member = $entity->getMember($userAccount);
     if ($member) {
       $memberRoles = $member->getRoles();
       foreach ($memberRoles as $role) {
