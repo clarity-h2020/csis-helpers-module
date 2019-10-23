@@ -133,7 +133,7 @@ var groupContentTemplate = {
           }
 
           var isScenarioInChrome = false;
-          var imageScale = 2;
+          var imageScale = 1;
           var imagesToRecover = [];
 
           if (iframeFound && elementToPrint.getElementById('#map') != null) {
@@ -152,10 +152,10 @@ var groupContentTemplate = {
             }
           }
 
-          html2canvas(elementToPrint, { useCORS: true, 
-            allowTaint: false, 
-            async: false, 
-            logging: false, 
+          html2canvas(elementToPrint, { useCORS: true,
+            allowTaint: false,
+            async: false,
+            logging: false,
             foreignObjectRendering: isScenarioInChrome,
 	          scale: imageScale,
             onclone: function(doc) {
