@@ -101,19 +101,21 @@ function updateRelationForStep(csrfToken, action, stepUUID, twinUUID, postData) 
 
 // will be necessary for refreshing tables after Twin/Showcase has been added/removed from a Study
 function updateView() {
-  var instances = Drupal.views.instances;
-  var myViews;
+  if (typeof Drupal.views !== "undefined") {
+    var instances = Drupal.views.instances;
+    var myViews;
 
-  jQuery.each(instances, function getInstance(index, element) {
-    if (element.settings.view_display_id == "included_twins" || element.settings.view_display_id == "included_twins_ajax") {
-      myViews = element.element_settings.selector;
-      jQuery(myViews).triggerHandler('RefreshView');
-      console.log("view refreshed");
-    }
+    jQuery.each(instances, function getInstance(index, element) {
+      if (element.settings.view_display_id == "included_twins" || element.settings.view_display_id == "included_twins_ajax") {
+        myViews = element.element_settings.selector;
+        jQuery(myViews).triggerHandler('RefreshView');
+        console.log("view refreshed");
+      }
 
-  });
-  //jQuery('form#views-exposed-form-twins-block-1').submit();
-  //console.log("form submitted");
+    });
+    //jQuery('form#views-exposed-form-twins-block-1').submit();
+    //console.log("form submitted");
+  }
 }
 
 // probably this is not needed anymore, since solved using two separate View attachments
