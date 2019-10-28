@@ -53,6 +53,7 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
         // DEPRECATED: use studyInfo/datapackageInfo/resourceInfo instead!
         $entityInfo['Warning'] = 'DEPRECATED! Use studyInfo instead';
         $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = $entityInfo;
+        $build['#attached']['library'][] = 'csis_helpers/permission_control';
         break;
       case 'data_package':
         $build['#attached']['drupalSettings']['csisHelpers']['datapackageInfo'] = $entityInfo;
