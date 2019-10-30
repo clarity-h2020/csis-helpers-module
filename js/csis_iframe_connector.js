@@ -177,7 +177,7 @@
              * 
              * @type {String}
              */
-                var urbanAdaptationViewerUrl = 'https://tableau.discomap.eea.europa.eu/t/Aironline/views/2019_Urban_vulnerability_links/mainpage?iframeSizedToWindow=false&%3Aembed=y&%3AshowAppBanner=false&%3Adisplay_count=yes&%3AshowVizHome=yes&%3Atoolbar=yes&City_param=';
+                var urbanAdaptationViewerUrl = 'https://csis.myclimateservice.eu/t/Aironline/views/2019_Urban_vulnerability_links/mainpage?iframeSizedToWindow=false&%3Aembed=y&%3AshowAppBanner=false&%3Adisplay_count=yes&%3AshowVizHome=yes&%3Atoolbar=yes&City_param=';
                 console.debug(`initilizing iFrame with ${urbanAdaptationViewerUrl}`);
                 urbanAdaptationViewerUrl += drupalSettings.csisHelpers.studyInfo.eea_city_name;
                 urbanAdaptationViewer.setAttribute('src', urbanAdaptationViewerUrl);
