@@ -54,6 +54,7 @@ function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityVi
         $entityInfo['Warning'] = 'DEPRECATED! Use studyInfo instead';
         $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = $entityInfo;
         $build['#attached']['library'][] = 'csis_helpers/permission_control';
+        //$build['#attached']['library'][] = 'csis_helpers/pull_emikat_status'; // is it needed in the GL-steps as well or just in the Study group?
         break;
       case 'data_package':
         $build['#attached']['drupalSettings']['csisHelpers']['datapackageInfo'] = $entityInfo;
@@ -74,6 +75,7 @@ function csis_helpers_group_view(array &$build, EntityInterface $entity, EntityV
   $build['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_group_entity_info($entity);
   $build['#attached']['library'][] = 'csis_helpers/entityinfo_helpers';
   $build['#attached']['library'][] = 'csis_helpers/permission_control';
+  $build['#attached']['library'][] = 'csis_helpers/pull_emikat_status';
 
   $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_group_entity_info($entity);
 }
@@ -250,6 +252,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     $groupuuid[] = $relation->getGroup()->uuid();
     $groupEmikatID = $relation->getGroup()->get('field_emikat_id')->value;
     $groupEmikatID = empty($groupEmikatID) ? -1 : intval($groupEmikatID);
+    $calculationStatus = $relation->getGroup()->get('field_calculation_status')->value;
     $groupName = $relation->getGroup()->get('field_name')->value;
     $groupDatapackageID = $relation->getGroup()->get('field_data_package')->target_id;
     $groupArea = $relation->getGroup()->get('field_area')->value;
@@ -314,6 +317,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     'id' => (empty($groupid) ? -1 : $groupid[0]), //overwrites $entityinfo.id from csis_helpers_node_entity_info
     'uuid' => (empty($groupuuid) ? -1 : $groupuuid[0]), //overwrites $entityinfo.uuid from csis_helpers_node_entity_info
     'study_emikat_id' => $groupEmikatID,
+    'calculation_status' => $calculationStatus,
     'study_datapackage_uuid' => $datapackageUUID,
     'study_area' => $groupArea,
     'eea_city_name' => $groupEeaName,
@@ -409,6 +413,7 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
 
     $emikatId = $entity->get('field_emikat_id')->value;
     $emikatId = empty($emikatId) ? -1 : intval($emikatId);
+    $calculationStatus = $entity->get('field_calculation_status')->value;
 
     $groupEntityInfo = array(
       //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group!
@@ -419,6 +424,7 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
       'study' => $entity->id(), //deprecated -> use  entitiyinfo.study.id
       'study_uuid' => $entity->uuid(), //deprecated -> use  entitiyinfo.study.uuid
       'study_emikat_id' => $emikatId,
+      'calculation_status' => $calculationStatus,
       'study_datapackage_uuid' => $datapackageUUID,
       'study_area' => $entity->get('field_area')->value,
       'eea_city_name' => $eeaName,

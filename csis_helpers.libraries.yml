@@ -97,3 +97,13 @@ permission_control:
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings
+
+pull_emikat_status:
+  js:
+    js/csis_pull_emikat_status.js:
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings
