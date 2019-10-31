@@ -69,7 +69,7 @@ function pullEmikatStatusReal(authInfo, emikatID) {
     },
     success: function (data, status, xhr) {
       console.log(data);
-      processCalculationStatus(data['rows']);
+      processCalculationStatus(data['rows'], authInfo, emikatID);
 
     },
     error: function (xhr, textStatus, error) {
@@ -82,40 +82,45 @@ function pullEmikatStatusReal(authInfo, emikatID) {
 }
 
 // analyze returned batchjobs and create appropriate message for user
-function processCalculationStatus(batchJobs) {
-  batchJobs.forEach(function (job, index) {
+function processCalculationStatus(batchJobs, authInfo, emikatID) {
+  var job;
+  var relevantJobs = 0;
+  var finishedJobs = 0;
+  var errors = 0;
+
+  for (let i = 0; i < batchJobs.length; i++) {
+    job = batchJobs[i];
     console.log("JobID: " + job['values'][0] + " with status: " + job['values'][4]);
-  });
+
+    relevantJobs++;
+    if (job['values'][4] == "OK") {
+      finishedJobs++;
+    }
+    else if (job['values'][4] == "ERR") {
+      errors++;
+    }
+
+    // stop loop here, because all jobs after that one belong to an old calculation
+    if (job[1] == "Rebuild Table CLY_PARAMETER#1976") {
+      break;
+    }
+  }
+
+  if (errors > 0) {
+    printStatus("There have been " + errors + " errors in the calculation process. Please try to adapt your Study settings or contact the site administrators.")
+    // TODO: set field_calculation_status of the Study via JSONAPI to 0
+  }
+  else if (relevantJobs != finishedJobs) {
+    printStatus("Calculations are still ongoing. In general this process takes about 10-15 minutes depending on the size of the Study area.");
+    setTimeout(function () {
+      pullEmikatStatusReal(authInfo, emikatID);
+    }, 10000); // repeat request to Emikat after 10 seconds
+  }
+  else {
+    printStatus("Calculations are completed. You should now be able to see the results in the next steps.");
+    // TODO: set field_calculation_status of the Study via JSONAPI to 0
+  }
 }
-
-// function pullEmikatStatus() {
-//   var responseStatus = 0
-//   jQuery
-//     .get(Drupal.url('rest-test'))
-//     .done(function (data) {
-//       responseStatus = data[0].status;
-//       console.log(responseStatus);
-
-//       // calculation still running
-//       if (responseStatus == 0) {
-//         console.log("calculation not done, triggering again...");
-//         printStatus("running...");
-//         setTimeout(pullEmikatStatus, 2000); // you could choose not to continue on failure...
-//       }
-//       // calculation returned an error
-//       else if (responseStatus == 1) {
-//         console.log("calculation returned an error");
-//         printStatus("error");
-//         //TODO: now set via REST the field_calculation_status to 0 (zero meaning it's not runnig)
-//       }
-//       // calculation finished successfully
-//       else {
-//         console.log("calculation finished successfully!");
-//         printStatus("success");
-//         //TODO: now set via REST the field_calculation_status to 0 (zero meaning it's not runnig)
-//       }
-//     });
-// }
 
 // prints the received status into a DIV element for the users to see
 function printStatus(message) {

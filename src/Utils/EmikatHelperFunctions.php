@@ -146,8 +146,9 @@ class EmikatHelperFunctions {
         )
       );
       $emikatID = $this->sendPutRequest($payload, $auth, $studyID);
-      // store the given ID from Emikat
+      // store the given ID from Emikat and set calculation status to 1 (= active/ongoing)
       $entity->set("field_emikat_id", $emikatID);
+      $entity->set("field_calculation_status", 1);
     }
     // -----------------------------------------------------
     // ---------- POST request with updated Study ----------
@@ -164,6 +165,8 @@ class EmikatHelperFunctions {
       $success = $this->sendPostRequest($payload, $auth, $emikatID);
 
       if ($success) {
+        // set calculation status to 1 (= active/ongoing)
+        $entity->set("field_calculation_status", 1);
         // generate status messages for FE and BE
         \Drupal::logger('EmikatHelperFunctions')->notice(
           "Emikat was notified via POST of updates in Study " . $studyID
