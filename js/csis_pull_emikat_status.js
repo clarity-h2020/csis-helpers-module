@@ -1,7 +1,6 @@
 (function ($, Drupal, drupalSettings) {
 
   $(document).ready(function () {
-    console.log("in the emikat status puller...");
 
     if (drupalSettings.csisHelpers === undefined) {
       return;
@@ -9,16 +8,16 @@
 
     var calculationStatus = drupalSettings.csisHelpers.studyInfo.calculation_status;
 
+    // if calculation is active ( == 1) periodically pull the status until calculation is done or has failed
     if (calculationStatus == 1) {
+      console.log("pulling calculation status from Emikat.");
 
       var emikatID = drupalSettings.csisHelpers.studyInfo.study_emikat_id;
-      getUserEndpoint(emikatID);
-      // periodically ask for the Emikat status via ajax call if calcStat == 1 (1 meaning it's running)
-      //console.log("calculation is active, so pull status from Emikat");
-      //setTimeout(pullEmikatStatusReal(emikatID), 5000);
+      var studyUUID = drupalSettings.csisHelpers.studyInfo.study_uuid;
+      getUserEndpoint(emikatID, studyUUID);
     }
     else {
-      console.log("calculation not active, so no action needed");
+      console.log("calculation not active, so no pulling from Emikat needed.");
     }
 
   });
@@ -26,13 +25,23 @@
 })(jQuery, Drupal, drupalSettings);
 
 
-function getUserEndpoint(emikatID) {
+function getCsrfToken(callback) {
+  jQuery
+    .get(Drupal.url('rest/session/token'))
+    .done(function (data) {
+      var csrfToken = data;
+      callback(csrfToken);
+    });
+}
+
+
+function getUserEndpoint(emikatID, studyUUID) {
   jQuery.ajax({
     url: "/jsonapi",
     method: "GET",
     success: function (data, status, xhr) {
       var userEndpoint = data.meta.links.me.href;
-      getUserCredentials(userEndpoint, emikatID);
+      getUserCredentials(userEndpoint, emikatID, studyUUID);
 
     },
     error: function (xhr, textStatus, error) {
@@ -42,13 +51,14 @@ function getUserEndpoint(emikatID) {
   });
 }
 
-function getUserCredentials(userEndpoint, emikatID) {
+
+function getUserCredentials(userEndpoint, emikatID, studyUUID) {
   jQuery.ajax({
     url: userEndpoint,
     method: "GET",
     success: function (data, status, xhr) {
       var authInfo = data.data.attributes.field_basic_auth_credentials;
-      pullEmikatStatusReal(authInfo, emikatID);
+      pullEmikatStatusReal(authInfo, emikatID, studyUUID);
 
     },
     error: function (xhr, textStatus, error) {
@@ -58,8 +68,9 @@ function getUserCredentials(userEndpoint, emikatID) {
   });
 }
 
-// AJAX Call to Emikat about the status of the current study calculations
-function pullEmikatStatusReal(authInfo, emikatID) {
+
+// AJAX call to Emikat requesting the status of the current study calculations
+function pullEmikatStatusReal(authInfo, emikatID, studyUUID) {
   jQuery.ajax({
     url: "https://service.emikat.at/EmiKatTst/api/scenarios/" + emikatID + "/feature/tab.AD_V_BATCH_IN_QUEUE.1710/table/data?rownum=20&filter=SZM_SZENARIO_REF=" + emikatID +"&sortby=OBJECT_ID=DESC",
     method: "GET",
@@ -68,8 +79,8 @@ function pullEmikatStatusReal(authInfo, emikatID) {
       'Authorization': 'Basic '+btoa(authInfo),
     },
     success: function (data, status, xhr) {
-      console.log(data);
-      processCalculationStatus(data['rows'], authInfo, emikatID);
+      //console.log(data);
+      processCalculationStatus(data['rows'], authInfo, emikatID, studyUUID);
 
     },
     error: function (xhr, textStatus, error) {
@@ -81,8 +92,9 @@ function pullEmikatStatusReal(authInfo, emikatID) {
   });
 }
 
+
 // analyze returned batchjobs and create appropriate message for user
-function processCalculationStatus(batchJobs, authInfo, emikatID) {
+function processCalculationStatus(batchJobs, authInfo, emikatID, studyUUID) {
   var job;
   var relevantJobs = 0;
   var finishedJobs = 0;
@@ -107,27 +119,75 @@ function processCalculationStatus(batchJobs, authInfo, emikatID) {
   }
 
   if (errors > 0) {
-    printStatus("There have been " + errors + " errors in the calculation process. Please try to adapt your Study settings or contact the site administrators.")
-    // TODO: set field_calculation_status of the Study via JSONAPI to 0
+    printStatus(
+      "There have been " + errors + " errors in the calculation process. Please try to adapt your Study settings or contact the site administrators.",
+      "messages--error"
+    );
+    getCsrfToken(function (csrfToken) {
+      updateCalcStatusInStudy(csrfToken, studyUUID);
+    });
   }
   else if (relevantJobs != finishedJobs) {
-    printStatus("Calculations are still ongoing. In general this process takes about 10-15 minutes depending on the size of the Study area.");
+    printStatus(
+      finishedJobs + " out of " + relevantJobs + " processes have finished. In general calculations take about 10-15 minutes depending on the size of the Study area.",
+      "messages--warning"
+    );
     setTimeout(function () {
       pullEmikatStatusReal(authInfo, emikatID);
-    }, 10000); // repeat request to Emikat after 10 seconds
+    }, 20000); // repeat request to Emikat after 20 seconds
   }
   else {
-    printStatus("Calculations are completed. You should now be able to see the results in the next steps.");
-    // TODO: set field_calculation_status of the Study via JSONAPI to 0
+    printStatus(
+      "Calculations are completed. You should now be able to see the results in the next steps.",
+      "messages--status"
+    );
+    getCsrfToken(function (csrfToken) {
+      updateCalcStatusInStudy(csrfToken, studyUUID);
+    });
   }
 }
 
-// prints the received status into a DIV element for the users to see
-function printStatus(message) {
+
+// set the calculation status of the Study to 0 (=inactive/done) if Emikat shows that it's either completed or gave an error
+function updateCalcStatusInStudy(csrfToken, studyUUID) {
+  postData = {
+    'data': {
+      'type': 'group--study',
+      'id': studyUUID,
+      'attributes': {
+        'field_calculation_status': {
+          'value': 0
+        }
+      }
+    }
+  };
+
+  jQuery.ajax({
+    url: "/jsonapi/group/study/" + studyUUID,
+    method: "PATCH",
+    headers: {
+      "X-CSRF-Token": csrfToken,
+      "Content-Type": "application/vnd.api+json",
+      "Accept": "application/vnd.api+json"
+    },
+    data: JSON.stringify(postData),
+    success: function (data, status, xhr) {
+      console.log("Successfully updated the Study calculation status");
+    },
+    error: function (data, status, xhr) {
+      console.log("Error updating the Study calculation status");
+      console.log(xhr.responseText);
+    }
+  });
+}
+
+
+// prints the received MESSAGE into a DIV element with CSS class STATUSCLASS for the users to see
+function printStatus(message, statusClass) {
 
   var msgContainer = document.createElement('div')
   msgContainer.setAttribute("id", "calculation-status")
-  msgContainer.setAttribute("class", "messages messages--status")
+  msgContainer.setAttribute("class", "messages " + statusClass)
   msgContainer.innerHTML = "<p>" + message + "</p>"
 
   // check if DIV element with Calculation status already exists (=> overwrite) or otherwise create one

@@ -165,8 +165,10 @@ class EmikatHelperFunctions {
       $success = $this->sendPostRequest($payload, $auth, $emikatID);
 
       if ($success) {
-        // set calculation status to 1 (= active/ongoing)
-        $entity->set("field_calculation_status", 1);
+        // set calculation status to 1 (= active/ongoing) if recalculation needed
+        if ($forceRecalculate) {
+          $entity->set("field_calculation_status", 1);
+        }
         // generate status messages for FE and BE
         \Drupal::logger('EmikatHelperFunctions')->notice(
           "Emikat was notified via POST of updates in Study " . $studyID
