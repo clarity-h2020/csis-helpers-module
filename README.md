@@ -45,6 +45,9 @@ The initial triggering of Emikat happens only after all relevant (relevant for E
 
 Emikat is notified of changes in the Study only when these relevant fields are changed. 
 
+### Pulling current calculation status from Emikat for ongoing calculations
+In the Study-step of each Study the module checks the calculation_status in the $studyInfo object to see if calculations are still ongoing or not. If they are active, it periodically pulls the current status from Emikat via AJAX and prints it for the user until calculations are completed or have failed. In case of errors or successfull completion the field_calculation_status in the Study is set to 0 (==non-active/done). Everytime calculations are triggered in Emikat, this field is set to 1 (==active) and the status is again pulled periodically.
+
 ### Modifications for Entity browsers
 There are two libraies in this module which you can attach to a view entity browser display of a view.
 - `entitybrowser_helpers`: this attaches a javascript to the entity browser which implements a single selection behavior. ON selection of an element all othe selected elements get unselected
