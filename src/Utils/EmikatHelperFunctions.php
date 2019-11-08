@@ -19,6 +19,7 @@ class EmikatHelperFunctions {
    * Checks based on relevant fields whether Emikat should be triggered or not
    * and if recalculation on Emikat-side is necessary
    * considered "relevant" are for now the following fields:
+   * - Study type
    * - Study area
    * - referenced Data package
    * - Study title and goal (but they don't require recalculations in case they are changed)
@@ -27,36 +28,26 @@ class EmikatHelperFunctions {
    * @return integer status code
    */
   private function checkStudyChanges(\Drupal\Core\Entity\EntityInterface $entity) {
-    /*Todo: implement following workflow
-    - if calcMethod does not contain "emikat":
-      - if origCalcMethod contains "emikat" --> immediately return status = 3 (Study no longer active in Emikat)
-      - else --> immediately return status = 0, since Study was/is not relevant for Emikat
-    - else:
-      - if calcMethod != origCalcMethod:
-        - if origCalcMethod contains "emikat" --> set status = 2, since calculations need to be completed again
-        - else --> potentially trigger initial PUT request
-      - else --> do nothing since calcMethod didn't change
-
-      Questions: would it be better to first check if studytype has changed?
+    /*
+    Process of analyzing Study type explained:
+    - compare current Study type with original Study type
+      1) if they differ, check if Study used to be relevant and if it is relevant now:
+        a) it used to be relevant, but isn't anymore -> tell Emikat it can deactive Study
+        b) it was not and is not relevant -> ignore this Study
+        c) it is relevant now (doesn't matter if it was in the past) -> trigger Emikat (with calculations)
+      2) if they don't differ, check relevancy of current Study type:
+        a) it is not relevant -> ignore this Study
+        b) it is relevant -> continue with comparing other fields to determine if Emikat needs to be (re)triggered
     */
 
-    $studyTypeTerm = Term::load($entity->get('field_study_type')->target_id);
-    //dump($studyTypeTerm);
-    $calcMethodTerms = $studyTypeTerm->get('field_study_calculation')->referencedEntities();
-    //dump($calcMethodTerms);
-    foreach ($calcMethodTerms as $calcMethodTerm) {
-      $calcMethodID = $calcMethodTerm->get("field_calculation_method_id")->value;
-      //dump($calcMethodID);
-    }
-
-
     /*
-      status codes:
+    status codes:
       0 -> don't trigger Emikat
       1 -> trigger Emikat, recalculation not required
       2 -> trigger Emikat, recalculation required
       3 -> trigger Emikat, set Study to non-active since StudyType no longer compatible with Emikat
     */
+
     $status = 0;
 
     // if Study was just created it cannot yet have all necessary data since intial form doesn't provide those needed fields
@@ -65,7 +56,77 @@ class EmikatHelperFunctions {
       return $status;
     }
 
+    // --------------------- Analyzing Study type ----------------------
     $studyType = Term::load($entity->get('field_study_type')->target_id);
+    $studyTypeOrig = ($entity->original->get("field_study_type")->isEmpty() ? null : Term::load($entity->original->get('field_study_type')->target_id));
+    if ($studyType != $studyTypeOrig) {
+      // change in Study type occured or Study type set for the first time
+      $emikatRelevant = false;
+      $emikatRelevantOrig = false;
+
+      // check relevancy of original calc methods (if they exist)
+      if ($studyTypeOrig) {
+        $calcMethodsOrig = $studyTypeOrig->get('field_study_calculation')->referencedEntities();
+        foreach ($calcMethodsOrig as $calcMethodOrig) {
+          $calcMethodIDOrig = $calcMethodOrig->get("field_calculation_method_id")->value;
+          if (stripos($calcMethodIDOrig, "emikat") !== false) {
+            //Emikat is used for calculation, so it is relevant
+            $emikatRelevantOrig = true;
+            break;
+          }
+        }
+      }
+
+      // check relevancy of current calc methods
+      $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
+      foreach ($calcMethods as $calcMethod) {
+        $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
+        if (stripos($calcMethodID, "emikat") !== false) {
+          //Emikat is used for calculation, so it is relevant
+          $emikatRelevant = true;
+          break;
+        }
+      }
+
+      // compare
+      if (!$emikatRelevant && $emikatRelevantOrig) {
+        // Study used to be relevant for Emikat
+        $status = 3; // set Study to non-active since StudyType no longer compatible with Emikat
+        return $status;
+      }
+      else if (!$emikatRelevant && !$emikatRelevantOrig) {
+        // Study is not and was not relevant for Emikat -> return status = 0
+        return $status;
+      }
+      else {
+        // Study is NOW relevant for Emikat (and might have even been before, but since Study type changed recalculation necessary anyway)
+        $status = 2;
+        return $status;
+      }
+
+    }
+    else {
+      // Study type stayed the same, check if it is relevant for Emikat
+      $emikatRelevant = false;
+      $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
+      foreach ($calcMethods as $calcMethod) {
+        $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
+        if (stripos($calcMethodID, "emikat") !== false) {
+          //Emikat is used for calculation, so it is relevant
+          $emikatRelevant = true;
+          break;
+        }
+      }
+
+      if (!$emikatRelevant) {
+        // study not relevant for Emikat -> return status = 0 since further analyzing is senseless
+        return $status;
+      }
+      else {
+        // Study is relevant, so continue analyzing changes in the Study to determine further actions
+      }
+    }
+    // ------------------ Analyzing Study type End ---------------------
 
     // check relevant fields and set status
     if ($entity->label() != $entity->original->label()) {
