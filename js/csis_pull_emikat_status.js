@@ -134,7 +134,13 @@ function processCalculationStatus(batchJobs, authInfo, emikatID, studyUUID) {
     );
     setTimeout(function () {
       pullEmikatStatusReal(authInfo, emikatID);
-    }, 20000); // repeat request to Emikat after 20 seconds
+    }, 30000); // repeat request to Emikat after 30 seconds
+  }
+  else if (relevantJobs == 0) {
+    // Study probably just recently sent to Emikat for first time and no batchjobs in yet -> wait and retrigger
+    setTimeout(function () {
+      pullEmikatStatusReal(authInfo, emikatID);
+    }, 30000); // repeat request to Emikat after 30 seconds
   }
   else {
     printStatus(
