@@ -72,7 +72,7 @@ function getUserCredentials(userEndpoint, emikatID, studyUUID) {
 // AJAX call to Emikat requesting the status of the current study calculations
 function pullEmikatStatusReal(authInfo, emikatID, studyUUID) {
   jQuery.ajax({
-    url: "https://service.emikat.at/EmiKatTst/api/scenarios/" + emikatID + "/feature/tab.AD_V_BATCH_IN_QUEUE.1710/table/data?rownum=20&filter=SZM_SZENARIO_REF=" + emikatID +"&sortby=OBJECT_ID=DESC",
+    url: "https://service.emikat.at/EmiKatTst/api/scenarios/" + emikatID + "/feature/tab.AD_V_BATCH_IN_QUEUE.1710/table/data?rownum=20&filter=SZM_SZENARIO_REF=" + emikatID +"&sortby=Oid%20DESC",
     method: "GET",
     headers: {
       'Accept': 'application/json, text/plain, */*',
@@ -113,7 +113,7 @@ function processCalculationStatus(batchJobs, authInfo, emikatID, studyUUID) {
     }
 
     // stop loop here, because all jobs after that one belong to an old calculation
-    if (job[1] == "Rebuild Table CLY_PARAMETER#1976") {
+    if (job['values'][1] == "Rebuild Table CLY_PARAMETER#1976") {
       break;
     }
   }
