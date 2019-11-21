@@ -170,6 +170,16 @@ class EmikatHelperFunctions {
       return $this->result;
     }
 
+    else if ($statusCode == 3) {
+      // ToDo: deactive Study in Emikat
+      \Drupal::logger('EmikatHelperFunctions')->info(
+        "Study " . $entity->id() . " no longer relevant for Emikat -> send deactivation request"
+      );
+      $this->result['message'] = "Study no longer relevant for Emikat.";
+      return $this->result;
+    }
+
+
     // extract all necessary field information for Request body
     $rawArea = $entity->get("field_area")->get(0)->getValue();
     $studyGoal = substr($entity->get("field_study_goa")->getString(), 0, 500);
