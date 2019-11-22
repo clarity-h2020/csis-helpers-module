@@ -122,9 +122,7 @@ class EmikatHelperFunctions {
         // study not relevant for Emikat -> return status = 0 since further analyzing is senseless
         return $status;
       }
-      else {
-        // Study is relevant, so continue analyzing changes in the Study to determine further actions
-      }
+      // else Study is relevant, so continue analyzing changes in the Study to determine further actions
     }
     // ------------------ Analyzing Study type End ---------------------
 
@@ -179,7 +177,6 @@ class EmikatHelperFunctions {
       return $this->result;
     }
 
-
     // extract all necessary field information for Request body
     $rawArea = $entity->get("field_area")->get(0)->getValue();
     $studyGoal = substr($entity->get("field_study_goa")->getString(), 0, 500);
@@ -193,7 +190,6 @@ class EmikatHelperFunctions {
       $city = $entity->get("field_city_region")->entity->label();
       $cityCode = $cityTerm->get('field_city_code')->value;
     }
-
 
     // get credentials for Emikat server
     $config = \Drupal::config('csis_helpers.default');
