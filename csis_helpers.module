@@ -232,6 +232,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
   $datapackageUUID = null;
   $groupArea = null;
   $groupEeaName = null;
+  $groupCityCode = null;
   $relations = GroupContent::loadByEntity($entity);
   $studyPreset = array();
   $studyPresets = array(); // stores ONLY 1 preset, will be replaced by $studyScenarios
@@ -305,6 +306,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
 
     if ($groupCityTerm) {
       $groupEeaName = $groupCityTerm->get('field_eea_city_profile_name')->value;
+      $groupCityCode = $groupCityTerm->get('field_city_code')->value;
     }
   }
 
@@ -321,6 +323,7 @@ function csis_helpers_node_entity_info_study(\Drupal\Core\Entity\EntityInterface
     'study_datapackage_uuid' => $datapackageUUID,
     'study_area' => $groupArea,
     'eea_city_name' => $groupEeaName,
+    'city_code' => $groupCityCode,
     'study_presets' => $studyPresets,
     'study_scenarios' => $studyScenarios,
     'write_permissions' => ($has_user_special_roles ? 1 : 0),
@@ -341,6 +344,7 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
   if ($entity->getGroupType()->id() == "study") {
     $datapackageUUID = null;
     $eeaName = null;
+    $cityCode = null;
     $studyPreset = array();
     $studyPresets = array(); // stores ONLY 1 preset, will be replaced by $studyScenarios
     $studyScenarios = array(); // replacing $studyPresets in the future
@@ -352,10 +356,11 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
       $datapackageUUID = $datapackageNode->uuid();
     }
 
-    // load city term, if is has already been set in the Study
+    // load city term, if it has already been set in the Study
     $cityTerm = (!$entity->get('field_city_region')->isEmpty() ? Term::load($entity->get('field_city_region')->target_id) : false);
     if ($cityTerm) {
       $eeaName = $cityTerm->get('field_eea_city_profile_name')->value;
+      $cityCode = $cityTerm->get('field_city_code')->value;
     }
 
     // get Study presets (combination of time-period, emission scenario and event frequency) from Paragraph reference
@@ -428,6 +433,7 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
       'study_datapackage_uuid' => $datapackageUUID,
       'study_area' => $entity->get('field_area')->value,
       'eea_city_name' => $eeaName,
+      'city_code' => $cityCode,
       'study_presets' => $studyPresets,
       'study_scenarios' => $studyScenarios,
       'write_permissions' => ($has_user_special_roles ? 1 : 0),

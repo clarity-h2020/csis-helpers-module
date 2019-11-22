@@ -186,7 +186,14 @@ class EmikatHelperFunctions {
     $studyID = $entity->id();
     $emikatID = $entity->get("field_emikat_id")->getString();
     $countryCode = $entity->get("field_country")->entity->get("field_country_code")->value;
-    $city = $entity->get("field_city_region")->entity->label();
+    $city = null;
+    $cityCode = null;
+    $cityTerm = (!$entity->get('field_city_region')->isEmpty() ? Term::load($entity->get('field_city_region')->target_id) : false);
+    if ($cityTerm) {
+      $city = $entity->get("field_city_region")->entity->label();
+      $cityCode = $cityTerm->get('field_city_code')->value;
+    }
+
 
     // get credentials for Emikat server
     $config = \Drupal::config('csis_helpers.default');
@@ -198,7 +205,8 @@ class EmikatHelperFunctions {
       " \nCSIS_STUDY_AREA: " . $rawArea['left'] . ", " . $rawArea['bottom'] . ", " . $rawArea['right'] . ", " . $rawArea['top'] .
       " \nCSIS_URL: " . $studyRestURL .
       " \nCSIS_COUNTRY_CODE: " . $countryCode .
-      " \nCSIS_CITY: " . $city;
+      " \nCSIS_CITY: " . $city .
+      " \nCSIS_CITY_CODE: " . $cityCode;
 
     // let Emikat know whether the changes in the Study require a recalculation (only used in POST requests, since PUT sends new Studies)
     $forceRecalculate = false;
