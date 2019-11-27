@@ -96,7 +96,7 @@ class TestingService {
     $warnings += $this->checkBatchjobs($emikatID, $auth);
 
     // check if the results for the HC local effects table are there
-    $warnings += $this->checkHCLETable($emikatID, $auth);
+    $warnings += $this->checkTables($emikatID, $auth);
 
     if ($warnings == 0) {
       \Drupal::logger('csis_helpers_testing')->notice(
@@ -203,17 +203,18 @@ class TestingService {
 
 
   /**
-   * Checks if table for HC local effects has any results accessible
+   * Checks if tables for HCLE, EE and RIA have any results accessible
    *
    * @param string $emikatID
    * @param array $auth
    * @return int number of warnings found
    */
-  private function checkHCLETable($emikatID, $auth)
+  private function checkTables($emikatID, $auth)
   {
     $client = \Drupal::httpClient();
     $warnings = 0;
     try {
+      // check HC Local Effects table
       $request = $client->get(
         "https://service.emikat.at/EmiKatTst/api/scenarios/". $emikatID . "/feature/view.2974/table/data?rownum=1000&filter=STUDY_VARIANT%3D%27BASELINE%27&filter=TIME_PERIOD%3D%2720410101-20701231%27&filter=EMISSIONS_SCENARIO%3D%27rcp45%27&filter=EVENT_FREQUENCY%3D%27Rare%27",
         array(
@@ -224,7 +225,38 @@ class TestingService {
         )
       );
       $response = json_decode($request->getBody(), true);
+      // table should always return some rows
+      if (count($response["rows"]) == 0) {
+        $warnings += 1;
+      }
 
+      // check Exposure Evalulation table
+      $request = $client->get(
+        "https://service.emikat.at/EmiKatTst/api/scenarios/" . $emikatID . "/feature/tab.CLY_EL_POPULATION_INTERPOLATED.2016/table/data?rownum=1000",
+        array(
+          'auth' => $auth,
+          'headers' => array(
+            'Content-type' => 'application/json',
+          ),
+        )
+      );
+      $response = json_decode($request->getBody(), true);
+      // table should always return some rows
+      if (count($response["rows"]) == 0) {
+        $warnings += 1;
+      }
+
+      // check Risk & Impact Analysis table
+      $request = $client->get(
+        "https://service.emikat.at/EmiKatTst/api/scenarios/" . $emikatID . "/feature/view.2975/table/data?rownum=1000&filter=STUDY_VARIANT%3D%27BASELINE%27&filter=TIME_PERIOD%3D%27Baseline%27&filter=EMISSIONS_SCENARIO%3D%27Baseline%27&filter=EVENT_FREQUENCY%3D%27Rare%27",
+        array(
+          'auth' => $auth,
+          'headers' => array(
+            'Content-type' => 'application/json',
+          ),
+        )
+      );
+      $response = json_decode($request->getBody(), true);
       // table should always return some rows
       if (count($response["rows"]) == 0) {
         $warnings += 1;
@@ -235,7 +267,7 @@ class TestingService {
     } catch (RequestException $e) {
       // generate error messages for BE and FE and set $success to false
       \Drupal::logger('csis_helpers_testing')->error(
-        "Automated testing: couldn't get table for HCLE: %error",
+        "Automated testing: couldn't get table: %error",
         array(
           '%error' => $e->getMessage(),
         )
