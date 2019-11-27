@@ -79,8 +79,10 @@ class TestingService {
   public function checkTestResults($data)
   {
     /* what can we check?
-    - all batchjobs done and results are not zero
-    - emulate API-calls done by our components and check if results are available
+    - status of batchjobs (must all be done after 3 hours)
+    - call HCLE table and check if content available
+    - call EE table and check if content available
+    - call RIA table and check if content available
     */
     $warnings = 0;
     $entity = Group::load($data->gid); // our test study
