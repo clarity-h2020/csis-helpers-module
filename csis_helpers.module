@@ -115,6 +115,37 @@ function csis_helpers_form_group_form_alter(&$form, $form_state, $form_id)
   }
 }
 
+/**
+ * implementation of hook_form_alter() for Datapackage selection form in Study
+ * "group_study_introduction_form"
+ */
+function csis_helpers_form_group_study_data_form_alter(&$form, $form_state, $form_id) {
+  // adds a preview of the selected data package
+  $form['#attached']['library'][] = 'csis_helpers/dp_selector_helpers';
+
+  $entity = $form_state->GetFormObject()->getEntity();
+
+  // load term with Study type to get the calculation methods
+  $studyType = Term::load($entity->get('field_study_type')->target_id);
+  $calcMethod = $studyType->get('field_study_calculation')->target_id;
+
+  // load available select options in form and loop through them
+  $dp_options = $form["field_data_package"]["widget"]["#options"];
+  foreach ($dp_options as $key => $dp_option) {
+    // skip the default "none" or "all" options
+    if (!is_numeric($key)) {
+      continue;
+    }
+    // load data package from select option and check its allowed calculation methods
+    $dp = Node::load($key);
+    $dpCalcMethods = $dp->get("field_calculation_methods")->getString();
+    if (strpos($dpCalcMethods, $calcMethod) === false) {
+      // remove data package from select options, since Study calculation method not supported
+      unset($form["field_data_package"]["widget"]["#options"][$key]);
+    }
+  }
+}
+
 function csis_helpers_preprocess_views_view(&$variables)
 {
   $view = $variables['view'];
@@ -129,6 +160,35 @@ function csis_helpers_preprocess_views_view(&$variables)
 
   $variables['#attached']['library'][] = 'csis_helpers/progress_indicator';
 }
+
+// /**
+//  * Implements hook_views_pre_view().
+//  * We use this to alter the FILTER CRITERIA for the data package selector EB
+//  * DOES NOT WORK SINCE WE CANNOT GET THE GROUP ID INSIDE THE-EB WIDGET!!!
+//  */
+// function csis_helpers_views_pre_view(\Drupal\views\ViewExecutable $view, $display_id, array &$args)
+// {
+//   if ($view->id() == 'data_packages' && $view->current_display == 'browser') {
+//     $filters = $view->display_handler->getOption('filters');
+//     $arguments = $view->display_handler->getOption('arguments');
+//     $current_path = \Drupal::service('path.current')->getPath();
+//     dump($current_path);
+//     //dump($view->display_handler);
+//     dump($arguments);
+//     if ($filters['field_calculation_methods_target_id']) {
+//       foreach ($filters['field_calculation_methods_target_id']['value'] as $key => $filter) {
+//         // here we would need the calculation methods of the study, which we don't get
+//         // if ($key == 2218) {
+//         //   unset($filters['field_calculation_methods_target_id']['value'][$key]);
+//         // }
+//       }
+//     }
+//     $view->display_handler->overrideOption('filters', $filters);
+//   }
+//   // $view->display['default']->handler->options['filters']['field_raion_value']['value']  = array(
+//   //   'val1' => 'val1'
+//   // );
+// }
 
 function csis_js_alter(&$javascript, \Drupal\Core\Asset\AttachedAssetsInterface $assets)
 {
