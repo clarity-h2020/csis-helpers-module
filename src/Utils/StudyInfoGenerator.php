@@ -163,6 +163,15 @@ class StudyInfoGenerator {
           $termEventFreq = Term::load($paragraph->get('field_event_frequency')->target_id);
           $termStudyVariant = Term::load($paragraph->get('field_study_variant')->target_id);
 
+          if (!$termTimePeriod || !$termEmScenario || !$termEventFreq || !$termStudyVariant) {
+            // although in the Study preset (aka Study scenario) all fields are required
+            // and therefore must exist if the paragraph exists, it could happen that
+            // the related taxonomy term has been removed from the system
+            // -> in such a case break for-loop and don't add an incomplete preset
+            // should be resolved once Drupal introduces a possiblity to unpublish taxonomy terms
+            break;
+          }
+
           // extract preset label and all needed values from those terms
           $studyPreset['label'] = $paragraph->get('field_label')->value;
           $studyPreset['time_period'] = $termTimePeriod->get('field_var_meaning')->value;
