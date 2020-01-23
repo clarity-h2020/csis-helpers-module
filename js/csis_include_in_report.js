@@ -147,6 +147,9 @@ var groupContentTemplate = {
               isScenarioInChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 	            imageScale = 2;
 	            replaceImgSourceWithBase64Encoding(elementToPrint, imagesToRecover);
+            } else if (elementToPrint.getElementById("centeringContainer") != null) {
+              //eea tool
+              elementToPrint = elementToPrint.getElementById("dashboard-spacer");
             } else {
               elementToPrint = elementToPrint.getElementById('root');
             }
@@ -245,6 +248,14 @@ function replaceTranslate3dStyleByElement(element) {
       if (parseFloat(getComputedStyle(element)['opacity']) == 0.0) {
         element.style['visibility'] = 'hidden';
       }
+    }
+    //replace the fade-in and fade-bg class from the eea elements. This class contains a transition that is not finished
+    //when the canvas will be created
+    if (element.classList != null && element.classList.contains('fade-bg')) {
+    	element.classList.remove('fade-bg');
+    }
+    if (element.classList != null && element.classList.contains('fade-in')) {
+    	element.classList.remove('fade-in');
     }
   }
 }

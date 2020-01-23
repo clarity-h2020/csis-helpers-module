@@ -1,3 +1,8 @@
 services:
   csis_helpers.emikat_helper_functions:
     class: Drupal\csis_helpers\Utils\EmikatHelperFunctions
+  csis_helpers.study_info_generator:
+    class: Drupal\csis_helpers\Utils\StudyInfoGenerator
+  csis_helpers.testing:
+    class: Drupal\csis_helpers\Utils\TestingService
+    arguments: ['@current_user']
