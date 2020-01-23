@@ -133,7 +133,7 @@ var groupContentTemplate = {
           }
 
           var isScenarioInChrome = false;
-          var imageScale = 1;
+          var imageScale = 2;
           var imagesToRecover = [];
 
           if (iframeFound && elementToPrint.getElementById('#map') != null) {
@@ -145,7 +145,7 @@ var groupContentTemplate = {
             if (elementToPrint.body.getElementsByClassName('container ng-scope')[0] != null) {
               elementToPrint = elementToPrint.body.getElementsByClassName('container ng-scope')[0];
               isScenarioInChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-	            imageScale = 2;
+	            imageScale = 1;
 	            replaceImgSourceWithBase64Encoding(elementToPrint, imagesToRecover);
             } else if (elementToPrint.getElementById("centeringContainer") != null) {
               //eea tool
