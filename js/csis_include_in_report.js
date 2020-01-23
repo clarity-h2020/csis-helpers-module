@@ -145,7 +145,7 @@ var groupContentTemplate = {
             if (elementToPrint.body.getElementsByClassName('container ng-scope')[0] != null) {
               elementToPrint = elementToPrint.body.getElementsByClassName('container ng-scope')[0];
               isScenarioInChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-	            imageScale = 1;
+	            imageScale = 2;
 	            replaceImgSourceWithBase64Encoding(elementToPrint, imagesToRecover);
             } else {
               elementToPrint = elementToPrint.getElementById('root');
