@@ -412,3 +412,23 @@ function extractSpatialExtent($entity)
     return null;
   }
 }
+
+/**
+ * Implements hook_cron().
+ */
+function csis_helpers_cron() {
+  $interval = 60 * 60 * 24; // Approx one day
+  $last_run = \Drupal::state()->get('csis_helpers.emikat_last_run', 0);
+  $item = new \stdClass(); // create a dummy object for the queue/service
+  $item->gid = 60; // The ID of our special Study group reserved for tests
+
+  // either run a new calculation every 24 hours or check if there are currently results available
+  if ((REQUEST_TIME - $last_run) >= $interval) {
+    \Drupal::service('csis_helpers.testing')->sendTestStudy($item);
+    \Drupal::state()->set('csis_helpers.emikat_last_run', REQUEST_TIME);
+  }
+  else {
+    \Drupal::service('csis_helpers.testing')->checkTestResults($item);
+  }
+
+}
