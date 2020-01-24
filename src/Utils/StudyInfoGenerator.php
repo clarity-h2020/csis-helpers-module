@@ -33,10 +33,16 @@ class StudyInfoGenerator {
     $userAccount = \Drupal::currentUser();
     $user = \Drupal\user\Entity\User::load($userAccount->id());
     $has_user_special_roles = false;
+    $isAnonymous = true;
+    $isMember = false;
 
     // bypass member roles permissions for admins
     if ($user->hasRole("administrator")) {
       $has_user_special_roles = true;
+    }
+
+    if (!$userAccount->isAnonymous()) {
+      $isAnonymous = false;
     }
 
     foreach ($relations as $relation) {
@@ -52,6 +58,7 @@ class StudyInfoGenerator {
 
       $member = $relation->getGroup()->getMember($userAccount);
       if ($member) {
+        $isMember = true;
         $memberRoles = $member->getRoles();
         foreach ($memberRoles as $role) {
           // GL-steps should be writable for owners and team members, but not observers
@@ -126,6 +133,8 @@ class StudyInfoGenerator {
       'city_code' => $groupCityCode,
       'study_presets' => $studyPresets,
       'study_scenarios' => $studyScenarios,
+      'is_anonymous' => $isAnonymous,
+      'is_member' => $isMember,
       'write_permissions' => ($has_user_special_roles ? 1 : 0),
     );
     return $studyEntityInfo;
@@ -203,14 +212,21 @@ class StudyInfoGenerator {
     $userAccount = \Drupal::currentUser();
     $user = \Drupal\user\Entity\User::load($userAccount->id());
     $has_user_special_roles = false;
+    $isAnonymous = true;
+    $isMember = false;
 
     // bypass member roles permissions for admins
     if ($user->hasRole("administrator")) {
       $has_user_special_roles = true;
     }
 
+    if (!$userAccount->isAnonymous()) {
+      $isAnonymous = false;
+    }
+
     $member = $entity->getMember($userAccount);
     if ($member) {
+      $isMember = true;
       $memberRoles = $member->getRoles();
       foreach ($memberRoles as $role) {
         // Study group itself should be writable for owners only
@@ -241,6 +257,8 @@ class StudyInfoGenerator {
       'city_code' => $cityCode,
       'study_presets' => $studyPresets,
       'study_scenarios' => $studyScenarios,
+      'is_anonymous' => $isAnonymous,
+      'is_member' => $isMember,
       'write_permissions' => ($has_user_special_roles ? 1 : 0),
 
     );

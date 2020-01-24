@@ -13,11 +13,32 @@
         // get write permissions for current user based on their role in the group
         var writePermissions = drupalSettings.csisHelpers.studyInfo.write_permissions
 
-        // if user can't write to this group/node then hide the element
-        // hiding is in this case enough since Drupal itself will also check permissions
-        // when a form is called and block users without necessary permissions
         if (writePermissions == 0) {
-          $(this).hide();
+          $(this).remove();
+        }
+
+      });
+
+      $('.token-field-check-anonymous', context).once('checkAnonymous').each(function () {
+        //console.debug('checking anonymous');
+
+        // remove element for anonymous users
+        var isAnonymous = drupalSettings.csisHelpers.studyInfo.is_anonymous
+
+        if (isAnonymous == 1) {
+          $(this).remove();
+        }
+
+      });
+
+      $('.token-field-check-member', context).once('checkMember').each(function () {
+        //console.debug('checking member');
+
+        // check if user is member and remove element if it is not the case
+        var isMember = drupalSettings.csisHelpers.studyInfo.is_member
+
+        if (isMember == 0) {
+          $(this).remove();
         }
 
       });
