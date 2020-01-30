@@ -12,6 +12,8 @@ use Drupal\group\Entity\GroupContent;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\paragraphs\Entity\Paragraph;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * Disable in production!
@@ -371,4 +373,31 @@ function csis_helpers_cron() {
     \Drupal::service('csis_helpers.testing')->checkTestResults($item);
   }
 
+}
+
+/**
+ * Generates list with allowed options for this field based on the linked ParagraphType "Study presets" for the "Study" Group
+ * this function needs to be added to the configuration of the Field Storage for the given field under
+ * settings:
+ *   allowed_values_function: NAME_OF_THE_FUNCTION
+ *
+ * @param FieldStorageConfig $definition
+ * @param ContentEntityInterface $entity
+ * @param [type] $cacheable
+ * @return allowed options
+ */
+function csis_helpers_allowed_values_function(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, $cacheable)
+{
+  $options = [];
+  if (!$entity->get('field_study_presets')->isEmpty()) {
+    foreach ($entity->get('field_study_presets') as $paraReference) {
+      $paragraph = Paragraph::load($paraReference->target_id);
+
+      if ($paragraph && $paragraph->getType() == "variable_set") {
+        $options[$paraReference->target_id] = $paragraph->get('field_label')->value;
+      }
+    }
+  }
+
+  return $options;
 }

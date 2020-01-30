@@ -36,11 +36,6 @@ class StudyInfoGenerator {
     $isAnonymous = true;
     $isMember = false;
 
-    // bypass member roles permissions for admins
-    if ($user->hasRole("administrator")) {
-      $has_user_special_roles = true;
-    }
-
     if (!$userAccount->isAnonymous()) {
       $isAnonymous = false;
     }
@@ -67,6 +62,12 @@ class StudyInfoGenerator {
             break;
           }
         }
+      }
+
+      // bypass member roles permissions for admins
+      if ($user->hasRole("administrator")) {
+        $has_user_special_roles = true;
+        $isMember = true;
       }
 
       // get Study presets (combination of time-period, emission scenario and event frequency) from Paragraph reference
@@ -104,6 +105,19 @@ class StudyInfoGenerator {
           $studyPresets['event_frequency'] = $termEventFreq->get('field_var_meaning')->value;
           $studyPresets['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
         }
+      }
+
+      $activeScenario = $relation->getGroup()->get('field_active_scenario')->value;
+      if ($activeScenario) {
+        $paragraph = Paragraph::load($activeScenario);
+        $termEmScenario = Term::load($paragraph->get('field_emission_scenario')->target_id);
+        $termEventFreq = Term::load($paragraph->get('field_event_frequency')->target_id);
+        $termTimePeriod = Term::load($paragraph->get('field_time_period')->target_id);
+        $termStudyVariant = Term::load($paragraph->get('field_study_variant')->target_id);
+        $studyPresets['time_period'] = $termTimePeriod->get('field_var_meaning')->value;
+        $studyPresets['emission_scenario'] = $termEmScenario->get('field_var_meaning')->value;
+        $studyPresets['event_frequency'] = $termEventFreq->get('field_var_meaning')->value;
+        $studyPresets['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
       }
 
       if ($groupDatapackageID) {
@@ -215,11 +229,6 @@ class StudyInfoGenerator {
     $isAnonymous = true;
     $isMember = false;
 
-    // bypass member roles permissions for admins
-    if ($user->hasRole("administrator")) {
-      $has_user_special_roles = true;
-    }
-
     if (!$userAccount->isAnonymous()) {
       $isAnonymous = false;
     }
@@ -235,6 +244,12 @@ class StudyInfoGenerator {
           break;
         }
       }
+    }
+
+    // bypass member roles permissions for admins
+    if ($user->hasRole("administrator")) {
+      $has_user_special_roles = true;
+      $isMember = true;
     }
 
     $emikatId = $entity->get('field_emikat_id')->value;

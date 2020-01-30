@@ -217,7 +217,8 @@ class EmikatHelperFunctions {
         array(
           "name" => $entity->label() . " | " . $studyID,
           "description" => $description,
-          "status" => "AKT"
+          "status" => "AKT",
+          "forceRecalculate" => true
         )
       );
       $emikatID = $this->sendPutRequest($payload, $auth, $studyID);
