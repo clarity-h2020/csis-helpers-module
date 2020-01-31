@@ -92,11 +92,7 @@ var groupContentTemplate = {
 
         var studyID = drupalSettings.csisHelpers.studyInfo.study;
         var studyUUID = drupalSettings.csisHelpers.studyInfo.study_uuid;
-        var autoComment = $('div#reportInfoElement').text();
-
-        // update Report Image template
-        reportImageTemplate.data.attributes.title = "Report Image for Study " + studyID + " Step " + stepID;
-        reportImageTemplate.data.attributes.field_comment.value = autoComment;
+        var autoComment = $('div#reportInfoElement').text(); // currently this won't work, since we're using iframes
 
         // if we are not in a Gl-step, we need to follow another approach
         // in a third REST call the group content for the Report image needs to be POSTed
@@ -115,10 +111,19 @@ var groupContentTemplate = {
         // currently available: Map -> UUID = 1ce9180e-8439-45a8-8e80-23161b76c2b9, Table -> UUID = 36a3bb55-c6ff-40a4-92c3-92258e7d1374
         // TODO: Get those termIDs dynamically from Drupal
         var imageName = "map-snapshot.png"
-        if ($('#characteriseHazard-table-container').length) {
+        if ($('#table-component').length) {
           reportImageTemplate.data.relationships.field_report_category.data.id = "36a3bb55-c6ff-40a4-92c3-92258e7d1374";
           imageName = "table-snapshot.png";
         }
+        // if it's a map, add the current Study scenario details as part of the autoComment
+        else if ($('#map-component').length) {
+          // get information about the selected Study scenario for this map screenshot
+          autoComment = extractScenarioDetails(drupalSettings.csisHelpers.studyInfo.study_presets);
+        }
+
+        // update Report Image template
+        reportImageTemplate.data.attributes.title = "Report Image for Study " + studyID + " Step " + stepID;
+        reportImageTemplate.data.attributes.field_comment.value = autoComment;
 
         // only take screenshot if Element	has height and width, otherwise stored file cannot be displayed properly
         // .eq(0) gets the 1st jQuery object while .get(0) get the 1st DOM Element.
@@ -362,6 +367,7 @@ function postReportImageRelationship(csrfToken, stepUUID, reportImageUUID, repor
   });
 }
 
+
 /* Only needed when taking a Screenshot in the Study step, where there is no
 GL-step available, which could make the connection between Report image and Study group */
 function postReportImageGroupContent(csrfToken, stepUUID, reportImageUUID, reportImageNID) {
@@ -393,7 +399,6 @@ function postReportImageGroupContent(csrfToken, stepUUID, reportImageUUID, repor
 
 
 function openEditForm(reportImageNID, btnElement) {
-
   // create and click a button that will open the edit-form in a modal
   var currentPath = window.location.pathname;
   var link = jQuery('<a>');
@@ -410,4 +415,20 @@ function openEditForm(reportImageNID, btnElement) {
   // display "Include in report" button again and remove loading animation
   btnElement.show();
   jQuery('#lds-spinner-1').remove();
+}
+
+/**
+ * Returns the details of the active Study scenario as simple string
+ * @param {JSON object} scenarioJson
+ */
+function extractScenarioDetails(scenarioJson) {
+  var text =
+    `Selected Study scenario details:<br>
+    Time period: ${scenarioJson.time_period}<br>
+    Emission scenario: ${scenarioJson.emission_scenario}<br>
+    Event frequency: ${scenarioJson.event_frequency}<br>
+    Study variant: ${scenarioJson.study_variant}<br>
+    `;
+
+  return text;
 }
