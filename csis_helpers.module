@@ -389,12 +389,16 @@ function csis_helpers_cron() {
 function csis_helpers_allowed_values_function(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, $cacheable)
 {
   $options = [];
-  if (!$entity->get('field_study_presets')->isEmpty()) {
-    foreach ($entity->get('field_study_presets') as $paraReference) {
-      $paragraph = Paragraph::load($paraReference->target_id);
 
-      if ($paragraph && $paragraph->getType() == "variable_set") {
-        $options[$paraReference->target_id] = $paragraph->get('field_label')->value;
+  // check allowed values for the "active scenario" field based on defined scenarios in that Study
+  if ($definition->id() == "group.field_active_scenario") {
+    if (!$entity->get('field_study_presets')->isEmpty()) {
+      foreach ($entity->get('field_study_presets') as $paraReference) {
+        $paragraph = Paragraph::load($paraReference->target_id);
+
+        if ($paragraph && $paragraph->getType() == "variable_set") {
+          $options[$paraReference->target_id] = $paragraph->get('field_label')->value;
+        }
       }
     }
   }

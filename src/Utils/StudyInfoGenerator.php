@@ -186,6 +186,12 @@ class StudyInfoGenerator {
     // get Study presets (combination of time-period, emission scenario and event frequency) from Paragraph reference
     if (!$entity->get('field_study_presets')->isEmpty()) {
       foreach ($entity->get('field_study_presets') as $paraReference) {
+        // apparently when adding a new paragraph instance, it is first generated empty, which means that
+        // at first the new study scenario will have no reference and therefore generate a warning here after
+        if (!$paraReference->target_id) {
+          continue;
+        }
+
         $paragraph = Paragraph::load($paraReference->target_id);
 
         if ($paragraph && $paragraph->getType() == "variable_set") {
