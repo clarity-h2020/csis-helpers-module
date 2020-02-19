@@ -248,13 +248,28 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
 
 /**
  * Implements hook_entity_presave().
- * Needed currently for triggering Emikat once a Study is advanced enough or relevant information has changed
+ * Needed currently for triggering Emikat or the TM once a Study is advanced enough or relevant information has changed
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Drupal\node\Entity\Node[]
  */
 function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity)
 {
+  // after testing move this part into the second if-clause
+  if ($entity->bundle() == "study") {
+    $studyType = Term::load($entity->get('field_study_type')->target_id);
+    $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
+    foreach ($calcMethods as $calcMethod) {
+      $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
+      if (stripos($calcMethodID, "meteogrid") !== false) {
+        //TM is used for calculation, so it is relevant
+        /** @var \Drupal\csis_helpers\Utils\TMHelperFunctions $tmService */
+        $tmService = \Drupal::service('csis_helpers.tm_helper_functions');
+        $result = $tmService->triggerTM($entity);
+        break;
+      }
+    }
+  }
   // triggering Emikat only needed for Studies on live website
   if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() == "https://csis.myclimateservice.eu") {
     /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
