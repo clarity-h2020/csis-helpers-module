@@ -21,7 +21,7 @@ class TMHelperFunctions
   /**
    * Checks based on relevant fields whether the TM should be triggered or not
    * considered "relevant" are for now the following fields:
-   * - Study type
+   * - Study type (this should actually already be checked in the .module file!)
    * - Study title
    * - Study goal
    *
@@ -105,7 +105,7 @@ class TMHelperFunctions
   }
 
   /**
-   * Notifies the TM via Put or Post request about new or updated Study if necessary
+   * Notifies the TM via PUT or POST request about new or updated Study if necessary
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    * @return array with message and status type
@@ -133,8 +133,8 @@ class TMHelperFunctions
 
     // get credentials for Emikat server
     $config = \Drupal::config('csis_helpers.default');
-    $auth = array($config->get('emikat_username'), $config->get('emikat_password'));
-    // we will need another auth user for the TM
+    // authentication is done via CAS login
+    //$auth = array($config->get('emikat_username'), $config->get('emikat_password'));
 
     $payload = json_encode(
       array(
@@ -146,13 +146,13 @@ class TMHelperFunctions
 
     // ---------- PUT request with updated Study ----------
     if ($externalID) {
-      $this->sendPutRequest($payload, $auth, $externalID, $studyID);
+      $this->sendPutRequest($payload, $externalID, $studyID);
       // store the given ID from the TM and set calculation status to 1 (= active/ongoing)
     }
     // -----------------------------------------------------
     // ---------- POST request with new Study ----------
     else {
-      $externalID = $this->sendPostRequest($payload, $auth);
+      $externalID = $this->sendPostRequest($payload);
       $entity->set("field_emikat_id", $externalID);
 
       if ($externalID > 0) {
@@ -175,7 +175,7 @@ class TMHelperFunctions
    * @param [JSON] $payload
    * @return String externalID of study stored in the TM
    */
-  private function sendPutRequest($payload, $auth, $externalID, $studyID)
+  private function sendPutRequest($payload, $externalID, $studyID)
   {
     $client = \Drupal::httpClient();
 
@@ -183,17 +183,16 @@ class TMHelperFunctions
       $request = $client->put(
         "https://clarity.saver.red/es/simmer/api/study/" . $externalID . "/",
         array(
-          'auth' => $auth,
           'headers' => array(
             'Content-type' => 'application/json',
-            'X-CSRFToken' => 'WE NEED A TOKEN!!!'
+            'X-CSRFToken' => 'gQiw0ZjxWYKuk0FS6SqSvfq3SZTPGcjiQ6PH6MFwMn3WBLttZhXRmXWXen1gyyoO'
           ),
           'body' => $payload,
         )
       );
 
       $response = json_decode($request->getBody()->getContents(), true);
-      \Drupal::logger('TMHelperFunctions')->notice("TM was notified via PUT of of updates in Study " . $studyID);
+      \Drupal::logger('TMHelperFunctions')->notice("TM was notified via PUT of updates in Study " . $studyID);
       $this->result['message'] = "Notification of an update in a Study was sent to the TM.";
 
     } catch (RequestException $e) {
@@ -215,10 +214,9 @@ class TMHelperFunctions
    * Sends a POST request to TM with a new Study
    *
    * @param [JSON] $payload
-   * @param [array] $auth
    * @return String externalID of study stored in the TM
    */
-  private function sendPostRequest($payload, $auth)
+  private function sendPostRequest($payload)
   {
     $externalID = 0;
     $client = \Drupal::httpClient();
@@ -227,10 +225,9 @@ class TMHelperFunctions
       $request = $client->post(
         "https://clarity.saver.red/es/simmer/api/study/",
         array(
-          'auth' => $auth,
           'headers' => array(
             'Content-type' => 'application/json',
-            'X-CSRFToken' => 'WE NEED A TOKEN!!!'
+            'X-CSRFToken' => 'gQiw0ZjxWYKuk0FS6SqSvfq3SZTPGcjiQ6PH6MFwMn3WBLttZhXRmXWXen1gyyoO'
           ),
           'body' => $payload,
         )
