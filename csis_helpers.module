@@ -141,8 +141,8 @@ function csis_helpers_form_group_study_data_form_alter(&$form, $form_state, $for
     // load data package from select option and check its allowed calculation methods
     $dp = Node::load($key);
     $dpCalcMethods = $dp->get("field_calculation_methods")->getString();
-    if (strpos($dpCalcMethods, $calcMethod) === false) {
-      // remove data package from select options, since Study calculation method not supported
+    // remove data package from select options if unpublished or if Study calculation method not supported
+    if (!$dp->isPublished() || strpos($dpCalcMethods, $calcMethod) === false) {
       unset($form["field_data_package"]["widget"]["#options"][$key]);
     }
   }
