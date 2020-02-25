@@ -2,7 +2,7 @@
 	
 	$(document).ready(function() {
 		
-		if(drupalSettings.csisHelpers === undefined) {
+		if(drupalSettings.csisHelpers === undefined || drupalSettings.csisHelpers.entityinfo === undefined) {
 			return;
 		}
 		

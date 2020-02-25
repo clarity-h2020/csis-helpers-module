@@ -33,10 +33,11 @@ class StudyInfoGenerator {
     $userAccount = \Drupal::currentUser();
     $user = \Drupal\user\Entity\User::load($userAccount->id());
     $has_user_special_roles = false;
+    $isAnonymous = true;
+    $isMember = false;
 
-    // bypass member roles permissions for admins
-    if ($user->hasRole("administrator")) {
-      $has_user_special_roles = true;
+    if (!$userAccount->isAnonymous()) {
+      $isAnonymous = false;
     }
 
     foreach ($relations as $relation) {
@@ -52,6 +53,7 @@ class StudyInfoGenerator {
 
       $member = $relation->getGroup()->getMember($userAccount);
       if ($member) {
+        $isMember = true;
         $memberRoles = $member->getRoles();
         foreach ($memberRoles as $role) {
           // GL-steps should be writable for owners and team members, but not observers
@@ -60,6 +62,12 @@ class StudyInfoGenerator {
             break;
           }
         }
+      }
+
+      // bypass member roles permissions for admins
+      if ($user->hasRole("administrator")) {
+        $has_user_special_roles = true;
+        $isMember = true;
       }
 
       // get Study presets (combination of time-period, emission scenario and event frequency) from Paragraph reference
@@ -99,6 +107,19 @@ class StudyInfoGenerator {
         }
       }
 
+      $activeScenario = $relation->getGroup()->get('field_active_scenario')->value;
+      if ($activeScenario) {
+        $paragraph = Paragraph::load($activeScenario);
+        $termEmScenario = Term::load($paragraph->get('field_emission_scenario')->target_id);
+        $termEventFreq = Term::load($paragraph->get('field_event_frequency')->target_id);
+        $termTimePeriod = Term::load($paragraph->get('field_time_period')->target_id);
+        $termStudyVariant = Term::load($paragraph->get('field_study_variant')->target_id);
+        $studyPresets['time_period'] = $termTimePeriod->get('field_var_meaning')->value;
+        $studyPresets['emission_scenario'] = $termEmScenario->get('field_var_meaning')->value;
+        $studyPresets['event_frequency'] = $termEventFreq->get('field_var_meaning')->value;
+        $studyPresets['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
+      }
+
       if ($groupDatapackageID) {
         $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
         $datapackageUUID = $datapackageNode->uuid();
@@ -126,6 +147,8 @@ class StudyInfoGenerator {
       'city_code' => $groupCityCode,
       'study_presets' => $studyPresets,
       'study_scenarios' => $studyScenarios,
+      'is_anonymous' => $isAnonymous,
+      'is_member' => $isMember,
       'write_permissions' => ($has_user_special_roles ? 1 : 0),
     );
     return $studyEntityInfo;
@@ -163,6 +186,12 @@ class StudyInfoGenerator {
     // get Study presets (combination of time-period, emission scenario and event frequency) from Paragraph reference
     if (!$entity->get('field_study_presets')->isEmpty()) {
       foreach ($entity->get('field_study_presets') as $paraReference) {
+        // apparently when adding a new paragraph instance, it is first generated empty, which means that
+        // at first the new study scenario will have no reference and therefore generate a warning here after
+        if (!$paraReference->target_id) {
+          continue;
+        }
+
         $paragraph = Paragraph::load($paraReference->target_id);
 
         if ($paragraph && $paragraph->getType() == "variable_set") {
@@ -203,14 +232,16 @@ class StudyInfoGenerator {
     $userAccount = \Drupal::currentUser();
     $user = \Drupal\user\Entity\User::load($userAccount->id());
     $has_user_special_roles = false;
+    $isAnonymous = true;
+    $isMember = false;
 
-    // bypass member roles permissions for admins
-    if ($user->hasRole("administrator")) {
-      $has_user_special_roles = true;
+    if (!$userAccount->isAnonymous()) {
+      $isAnonymous = false;
     }
 
     $member = $entity->getMember($userAccount);
     if ($member) {
+      $isMember = true;
       $memberRoles = $member->getRoles();
       foreach ($memberRoles as $role) {
         // Study group itself should be writable for owners only
@@ -219,6 +250,12 @@ class StudyInfoGenerator {
           break;
         }
       }
+    }
+
+    // bypass member roles permissions for admins
+    if ($user->hasRole("administrator")) {
+      $has_user_special_roles = true;
+      $isMember = true;
     }
 
     $emikatId = $entity->get('field_emikat_id')->value;
@@ -241,6 +278,8 @@ class StudyInfoGenerator {
       'city_code' => $cityCode,
       'study_presets' => $studyPresets,
       'study_scenarios' => $studyScenarios,
+      'is_anonymous' => $isAnonymous,
+      'is_member' => $isMember,
       'write_permissions' => ($has_user_special_roles ? 1 : 0),
 
     );

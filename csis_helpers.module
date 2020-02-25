@@ -12,6 +12,8 @@ use Drupal\group\Entity\GroupContent;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\paragraphs\Entity\Paragraph;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * Disable in production!
@@ -431,4 +433,80 @@ function csis_helpers_cron() {
     \Drupal::service('csis_helpers.testing')->checkTestResults($item);
   }
 
+}
+
+/**
+ * Generates list with allowed options for this field based on the linked ParagraphType "Study presets" for the "Study" Group
+ * this function needs to be added to the configuration of the Field Storage for the given field under
+ * settings:
+ *   allowed_values_function: NAME_OF_THE_FUNCTION
+ *
+ * @param FieldStorageConfig $definition
+ * @param ContentEntityInterface $entity
+ * @param [type] $cacheable
+ * @return allowed options
+ */
+function csis_helpers_allowed_values_function(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, $cacheable)
+{
+  $options = [];
+
+  // check allowed values for the "active scenario" field based on defined scenarios in that Study
+  if ($definition->id() == "group.field_active_scenario") {
+    if (!$entity->get('field_study_presets')->isEmpty()) {
+      foreach ($entity->get('field_study_presets') as $paraReference) {
+        $paragraph = Paragraph::load($paraReference->target_id);
+
+        if ($paragraph && $paragraph->getType() == "variable_set") {
+          $options[$paraReference->target_id] = $paragraph->get('field_label')->value;
+        }
+      }
+    }
+  }
+
+  return $options;
+}
+
+
+// /**
+//  * Implements hook_group_access().
+//  */
+// function csis_helpers_group_access(\Drupal\Core\Entity\EntityInterface $entity, $operation, \Drupal\Core\Session\AccountInterface $account)
+// {
+//   \Drupal::logger('csis helpers access')->notice($entity->bundle() . ", " . $entity->id());
+//   // No opinion.
+
+//   if ($entity->bundle() == "study") {
+//     if($account->isAnonymous() && !$entity->get("field_publish")->value) {
+//       \Drupal::logger('csis helpers access')->notice("anonymous user shall not see this unpublished study");
+//       return AccessResult::forbidden();
+//     }
+//   }
+//   return AccessResult::neutral();
+// }
+
+
+/**
+ * Implements hook_ds_pre_render_alter().
+ */
+function csis_helpers_ds_pre_render_alter(array &$layout_render_array, array $context, array &$vars)
+{
+  // for Introduction, Summary and PDF tab of GL-step show custom description instead of default EU-GL taxonomy term
+  // if one was set in the used Study type template
+  if ($context['entity']->bundle() == 'gl_step') {
+    if ($context['view_mode'] == 'introduction') {
+      if (isset($vars['content']['ds_content']['group_prototype']['field_step_description']['#theme'])) {
+        unset($vars['content']['ds_content']['group_prototype']['field_field_eu_gl_methodology']);
+      }
+    }
+    elseif ($context['view_mode'] == 'summary') {
+      if (isset($vars['content']['left']['group_overview']['field_step_description']['#theme'])) {
+        unset($vars['content']['left']['group_overview']['field_field_eu_gl_methodology']);
+      }
+    }
+    elseif ($context['view_mode'] == 'pdf') {
+      if (isset($vars['content']['ds_content']['group_introduction']['field_step_description']['#theme'])) {
+        unset($vars['content']['ds_content']['group_introduction']['field_field_eu_gl_methodology']);
+      }
+    }
+  }
 }

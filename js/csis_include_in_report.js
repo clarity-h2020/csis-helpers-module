@@ -155,10 +155,10 @@ var groupContentTemplate = {
             }
           }
 
-          html2canvas(elementToPrint, { useCORS: true, 
-            allowTaint: false, 
-            async: false, 
-            logging: false, 
+          html2canvas(elementToPrint, { useCORS: true,
+            allowTaint: false,
+            async: false,
+            logging: false,
             foreignObjectRendering: isScenarioInChrome,
 	          scale: imageScale,
             onclone: function(doc) {
