@@ -7,6 +7,17 @@ entitybrowser_helpers:
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings
+
+dp_selector_helpers:
+  js:
+    js/csis_dp_selector_helpers.js:
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings
+
 entitybrowser_reorder:
   css:
     layout:
