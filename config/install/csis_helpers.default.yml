@@ -1,3 +1,5 @@
 csis_helpers:
   emikat_username: "changeit"
   emikat_password: "changeit"
+  tm_username: "changeit"
+  tm_password: "changeit"

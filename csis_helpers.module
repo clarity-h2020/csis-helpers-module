@@ -315,31 +315,41 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
  */
 function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity)
 {
-  // after testing move this part into the second if-clause
-  if ($entity->bundle() == "study") {
+  // trigger external apps (Emikat, TM) only based on fitting Study type and on live website
+  if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() == "https://csis.myclimateservice.eu") {
+
     $studyType = Term::load($entity->get('field_study_type')->target_id);
     $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
+
     foreach ($calcMethods as $calcMethod) {
       $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
+
       if (stripos($calcMethodID, "meteogrid") !== false) {
         //TM is used for calculation, so it is relevant
         /** @var \Drupal\csis_helpers\Utils\TMHelperFunctions $tmService */
         $tmService = \Drupal::service('csis_helpers.tm_helper_functions');
         $result = $tmService->triggerTM($entity);
+
+        //print result message to admins and developers directly to FE
+        $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+        if ($user->hasRole('administrator') || $user->hasRole('developer')) {
+          \Drupal::messenger()->addMessage($result['message'], $result['type']);
+        }
         break;
       }
-    }
-  }
-  // triggering Emikat only needed for Studies on live website
-  if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() == "https://csis.myclimateservice.eu") {
-    /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
-    $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
-    $result = $emikatService->triggerEmikat($entity);
 
-    //print result message to admins and developers directly to FE
-    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
-    if ($user->hasRole('administrator') || $user->hasRole('developer')) {
-      \Drupal::messenger()->addMessage($result['message'], $result['type']);
+      else if (stripos($calcMethodID, "emikat") !== false) {
+        /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
+        $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
+        $result = $emikatService->triggerEmikat($entity);
+
+        //print result message to admins and developers directly to FE
+        $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+        if ($user->hasRole('administrator') || $user->hasRole('developer')) {
+          \Drupal::messenger()->addMessage($result['message'], $result['type']);
+        }
+        break;
+      }
     }
   }
 }

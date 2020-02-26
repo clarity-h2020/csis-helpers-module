@@ -47,6 +47,22 @@ class DefaultForm extends ConfigFormBase {
       '#size' => 64,
       '#default_value' => $config->get('emikat_password'),
     ];
+    $form['tm_username'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('TM app username'),
+      '#description' => $this->t('Credentials for TM app REST service'),
+      '#maxlength' => 64,
+      '#size' => 64,
+      '#default_value' => $config->get('tm_username'),
+    ];
+    $form['tm_password'] = [
+      '#type' => 'password',
+      '#title' => $this->t('TM app password'),
+      '#description' => $this->t('Credentials for TM app REST service'),
+      '#maxlength' => 64,
+      '#size' => 64,
+      '#default_value' => $config->get('tm_password'),
+    ];
     return parent::buildForm($form, $form_state);
   }
 
@@ -65,8 +81,17 @@ class DefaultForm extends ConfigFormBase {
 
     $this->config('csis_helpers.default')
       ->set('emikat_username', $form_state->getValue('emikat_username'))
-      ->set('emikat_password', $form_state->getValue('emikat_password'))
-      ->save();
+      ->set('tm_username', $form_state->getValue('tm_username'));
+
+    // for passwords first check if a value has been set, otherwise ignore these fields in the submit
+    if ($form_state->getValue('emikat_password')) {
+      $this->config('csis_helpers.default')->set('emikat_password', $form_state->getValue('emikat_password'));
+    }
+    if ($form_state->getValue('tm_password')) {
+      $this->config('csis_helpers.default')->set('tm_password', $form_state->getValue('tm_password'));
+    }
+
+    $this->config('csis_helpers.default')->save();
   }
 
 }
