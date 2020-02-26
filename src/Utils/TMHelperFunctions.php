@@ -55,20 +55,15 @@ class TMHelperFunctions
     return $status;
   }
 
-
-  // public function triggerTM(\Drupal\Core\Entity\EntityInterface $entity) {
-  //   $csrfToken = $this->getCSRFToken();
-  //   return $csrfToken;
-  // }
-
   /**
    * Retrieve a CSRF-Token from the TM module
    *
    * @return String with the CSRF-Token
    */
-  private function getCSRFToken($auth) {
+  private function getAuthToken($auth)
+  {
     $client = \Drupal::httpClient();
-    $csrfToken = "";
+    $authToken = null;
 
     $payload = json_encode(
       array(
@@ -81,7 +76,6 @@ class TMHelperFunctions
       $request = $client->post(
         "https://clarity.saver.red/api-token-auth/",
         array(
-          'auth' => $auth,
           'headers' => array(
             'Content-type' => 'application/json'
           ),
@@ -91,7 +85,7 @@ class TMHelperFunctions
 
       $response = json_decode($request->getBody()->getContents(), true);
       //dump($response);
-      $csrfToken = $response["token"];
+      $authToken = $response["token"];
     } catch (RequestException $e) {
       // generate error messages for BE and FE
       \Drupal::logger('TMHelperFunctions')->error(
@@ -103,7 +97,7 @@ class TMHelperFunctions
       $this->result['message'] = "Error while trying to get a token from TM API. Check Drupal logs for details.";
       $this->result['type'] = "error";
     }
-    return $csrfToken;
+    return $authToken;
   }
 
   /**
@@ -118,49 +112,52 @@ class TMHelperFunctions
     $config = \Drupal::config('csis_helpers.default');
     $auth = array($config->get('tm_username'), $config->get('tm_password'));
 
-    $csrfToken = $this->getCSRFToken($auth);
-    // check whether or not relevant changes have been made in the Study
-    $statusCode = $this->checkStudyChanges($entity);
+    $authToken = $this->getAuthToken($auth);
 
-    // Don't notify TM if nothing relevant was changed
-    if ($statusCode == 0) {
-      \Drupal::logger('TMHelperFunctions')->info(
-        "TM not notified because study " . $entity->id() . " is either not fully ready or no relevant fields have changed"
-      );
-      $this->result['message'] = "TM was not notified because study is either not ready or no relevant fields have changed.";
-      return $this->result;
-    }
+    if ($authToken) {
+      // check whether or not relevant changes have been made in the Study
+      $statusCode = $this->checkStudyChanges($entity);
 
-    // extract all necessary field information for Request body
-    $studyGoal = substr($entity->get("field_study_goa")->getString(), 0, 2000);
-    $studyID = $entity->id();
-    $externalID = $entity->get("field_emikat_id")->getString();
-
-    $payload = json_encode(
-      array(
-        "name" => $entity->label(),
-        "description" => $studyGoal,
-        "reference" => $studyID
-      )
-    );
-
-    // ---------- PUT request with updated Study ----------
-    if ($externalID) {
-      $this->sendPutRequest($auth, $payload, $externalID, $studyID);
-      // store the given ID from the TM and set calculation status to 1 (= active/ongoing)
-    }
-    // -----------------------------------------------------
-    // ---------- POST request with new Study ----------
-    else {
-      $externalID = $this->sendPostRequest($auth, $payload);
-      $entity->set("field_emikat_id", $externalID);
-
-      if ($externalID > 0) {
-        // generate status messages for FE and BE
-        \Drupal::logger('TMHelperFunctions')->notice(
-          "TM was notified via POST of new Study " . $studyID
+      // Don't notify TM if nothing relevant was changed
+      if ($statusCode == 0) {
+        \Drupal::logger('TMHelperFunctions')->info(
+          "TM not notified because study " . $entity->id() . " is either not fully ready or no relevant fields have changed"
         );
-        $this->result['message'] = "TM was notified of new Study " . $studyID;
+        $this->result['message'] = "TM was not notified because study is either not ready or no relevant fields have changed.";
+        return $this->result;
+      }
+
+      // extract all necessary field information for Request body
+      $studyGoal = substr($entity->get("field_study_goa")->getString(), 0, 2000);
+      $studyID = $entity->id();
+      $externalID = $entity->get("field_emikat_id")->getString();
+
+      $payload = json_encode(
+        array(
+          "name" => $entity->label(),
+          "description" => $studyGoal,
+          "reference" => $studyID
+        )
+      );
+
+      // ---------- PUT request with updated Study ----------
+      if ($externalID) {
+        $this->sendPutRequest($authToken, $payload, $externalID, $studyID);
+        // store the given ID from the TM and set calculation status to 1 (= active/ongoing)
+      }
+      // -----------------------------------------------------
+      // ---------- POST request with new Study ----------
+      else {
+        $externalID = $this->sendPostRequest($authToken, $payload);
+
+        if ($externalID >= 0) {
+          $entity->set("field_emikat_id", $externalID);
+          // generate status messages for FE and BE
+          \Drupal::logger('TMHelperFunctions')->notice(
+            "TM was notified via POST of new Study " . $studyID
+          );
+          $this->result['message'] = "TM was notified of new Study " . $studyID;
+        }
       }
     }
 
@@ -175,7 +172,7 @@ class TMHelperFunctions
    * @param [JSON] $payload
    * @return String externalID of study stored in the TM
    */
-  private function sendPutRequest($auth, $payload, $externalID, $studyID)
+  private function sendPutRequest($authToken, $payload, $externalID, $studyID)
   {
     $client = \Drupal::httpClient();
 
@@ -183,8 +180,8 @@ class TMHelperFunctions
       $request = $client->put(
         "https://clarity.saver.red/es/simmer/api/study/" . $externalID . "/",
         array(
-          'auth' => $auth,
           'headers' => array(
+            'Authorization' => 'Token ' . $authToken,
             'Content-type' => 'application/json'
           ),
           'body' => $payload,
@@ -194,7 +191,6 @@ class TMHelperFunctions
       $response = json_decode($request->getBody()->getContents(), true);
       \Drupal::logger('TMHelperFunctions')->notice("TM was notified via PUT of updates in Study " . $studyID);
       $this->result['message'] = "Notification of an update in a Study was sent to the TM.";
-
     } catch (RequestException $e) {
       // generate error messages for BE and FE
       \Drupal::logger('TMHelperFunctions')->error(
@@ -206,7 +202,6 @@ class TMHelperFunctions
       $this->result['message'] = "PUT request to TM failed. For more details check recent log messages.";
       $this->result['type'] = "error";
     }
-
   }
 
 
@@ -216,17 +211,17 @@ class TMHelperFunctions
    * @param [JSON] $payload
    * @return String externalID of study stored in the TM
    */
-  private function sendPostRequest($auth, $payload)
+  private function sendPostRequest($authToken, $payload)
   {
-    $externalID = 0;
+    $externalID = -1;
     $client = \Drupal::httpClient();
 
     try {
       $request = $client->post(
         "https://clarity.saver.red/es/simmer/api/study/",
         array(
-          'auth' => $auth,
           'headers' => array(
+            'Authorization' => 'Token ' . $authToken,
             'Content-type' => 'application/json'
           ),
           'body' => $payload,
@@ -236,7 +231,6 @@ class TMHelperFunctions
       $response = json_decode($request->getBody()->getContents(), true);
       //dump($response);
       $externalID = $response["id"];
-
     } catch (RequestException $e) {
       // generate error messages for BE and FE and set $success to false
       \Drupal::logger('TMHelperFunctions')->error(
