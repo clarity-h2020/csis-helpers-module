@@ -132,10 +132,13 @@ class TMHelperFunctions
       $studyID = $entity->id();
       $externalID = $entity->get("field_emikat_id")->getString();
 
+      // simulation type has to be set according to the specifications of the TM API
+      // and will be for Clarity 118, as long as there is just one TM relevant Study type
       $payload = json_encode(
         array(
           "name" => $entity->label(),
           "description" => $studyGoal,
+          "simulationtype" => 118,
           "reference" => $studyID
         )
       );
