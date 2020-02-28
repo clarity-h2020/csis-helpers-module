@@ -16,10 +16,14 @@ class EmikatHelperFunctions {
   );
 
   /**
-   * Checks based on relevant fields whether Emikat should be triggered or not
-   * and if recalculation on Emikat-side is necessary
-   * considered "relevant" are for now the following fields:
-   * - Study type
+   * This function checks based on relevant fields whether Emikat should be triggered or not
+   * and if recalculation on Emikat-side is necessary.
+   *
+   * As decided in https://github.com/clarity-h2020/csis-helpers-module/issues/12, it will
+   * no longer be possible to change the Study type once it has been selected. Therefore,
+   * we don't need to compare current Study type with original Study type anymore.
+   *
+   * Considered "relevant" are for now the following fields:
    * - Study area
    * - referenced Data package
    * - Study title and goal (but they don't require recalculations in case they are changed)
@@ -28,24 +32,12 @@ class EmikatHelperFunctions {
    * @return integer status code
    */
   private function checkStudyChanges(\Drupal\Core\Entity\EntityInterface $entity) {
-    /*
-    Process of analyzing Study type explained:
-    - compare current Study type with original Study type
-      1) if they differ, check if Study used to be relevant and if it is relevant now:
-        a) it used to be relevant, but isn't anymore -> tell Emikat it can deactive Study
-        b) it was not and is not relevant -> ignore this Study
-        c) it is relevant now (doesn't matter if it was in the past) -> trigger Emikat (with calculations)
-      2) if they don't differ, check relevancy of current Study type:
-        a) it is not relevant -> ignore this Study
-        b) it is relevant -> continue with comparing other fields to determine if Emikat needs to be (re)triggered
-    */
 
     /*
     status codes:
       0 -> don't trigger Emikat
       1 -> trigger Emikat, recalculation not required
       2 -> trigger Emikat, recalculation required
-      3 -> trigger Emikat, set Study to non-active since StudyType no longer compatible with Emikat
     */
 
     $status = 0;
@@ -55,76 +47,6 @@ class EmikatHelperFunctions {
     if ($entity->isNew() || $entity->get('field_study_type')->isEmpty() || $entity->get("field_study_goa")->isEmpty() || $entity->get("field_area")->isEmpty() || $entity->field_data_package->isEmpty()) {
       return $status;
     }
-
-    // --------------------- Analyzing Study type ----------------------
-    $studyType = Term::load($entity->get('field_study_type')->target_id);
-    $studyTypeOrig = ($entity->original->get("field_study_type")->isEmpty() ? null : Term::load($entity->original->get('field_study_type')->target_id));
-    if ($studyType != $studyTypeOrig) {
-      // change in Study type occured or Study type set for the first time
-      $emikatRelevant = false;
-      $emikatRelevantOrig = false;
-
-      // check relevancy of original calc methods (if they exist)
-      if ($studyTypeOrig) {
-        $calcMethodsOrig = $studyTypeOrig->get('field_study_calculation')->referencedEntities();
-        foreach ($calcMethodsOrig as $calcMethodOrig) {
-          $calcMethodIDOrig = $calcMethodOrig->get("field_calculation_method_id")->value;
-          if (stripos($calcMethodIDOrig, "emikat") !== false) {
-            //Emikat is used for calculation, so it is relevant
-            $emikatRelevantOrig = true;
-            break;
-          }
-        }
-      }
-
-      // check relevancy of current calc methods
-      $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
-      foreach ($calcMethods as $calcMethod) {
-        $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
-        if (stripos($calcMethodID, "emikat") !== false) {
-          //Emikat is used for calculation, so it is relevant
-          $emikatRelevant = true;
-          break;
-        }
-      }
-
-      // compare
-      if (!$emikatRelevant && $emikatRelevantOrig) {
-        // Study used to be relevant for Emikat
-        $status = 3; // set Study to non-active since StudyType no longer compatible with Emikat
-        return $status;
-      }
-      else if (!$emikatRelevant && !$emikatRelevantOrig) {
-        // Study is not and was not relevant for Emikat -> return status = 0
-        return $status;
-      }
-      else {
-        // Study is NOW relevant for Emikat (and might have even been before, but since Study type changed recalculation necessary anyway)
-        $status = 2;
-        return $status;
-      }
-
-    }
-    else {
-      // Study type stayed the same, check if it is relevant for Emikat
-      $emikatRelevant = false;
-      $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
-      foreach ($calcMethods as $calcMethod) {
-        $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
-        if (stripos($calcMethodID, "emikat") !== false) {
-          //Emikat is used for calculation, so it is relevant
-          $emikatRelevant = true;
-          break;
-        }
-      }
-
-      if (!$emikatRelevant) {
-        // study not relevant for Emikat -> return status = 0 since further analyzing is senseless
-        return $status;
-      }
-      // else Study is relevant, so continue analyzing changes in the Study to determine further actions
-    }
-    // ------------------ Analyzing Study type End ---------------------
 
     // check relevant fields and set status
     if ($entity->label() != $entity->original->label()) {
@@ -137,8 +59,8 @@ class EmikatHelperFunctions {
       $status = 2;
     }
 
-    // since it's a Reference field, check datapackage field contents before trying to access them
-    // (needs to be done everytime since user could potentially remove datapackage from Study and leave it empty)
+    // since it's a Reference field, check data package field contents before trying to access them
+    // (needs to be done everytime since user could potentially remove data package from Study and leave it empty)
     $datapackage = ($entity->field_data_package->isEmpty() ? "empty" : $entity->field_data_package->entity->label());
     $datapackageOrig = ($entity->original->field_data_package->isEmpty() ? "empty" : $entity->original->field_data_package->entity->label());
     if ($datapackage != $datapackageOrig) {
@@ -165,15 +87,6 @@ class EmikatHelperFunctions {
         "Emikat not notified because study " . $entity->id() . " is either not fully ready or no relevant fields have changed"
       );
       $this->result['message'] = "Emikat was not notified because study is either not ready or no relevant fields have changed.";
-      return $this->result;
-    }
-
-    else if ($statusCode == 3) {
-      // ToDo: deactive Study in Emikat
-      \Drupal::logger('EmikatHelperFunctions')->info(
-        "Study " . $entity->id() . " no longer relevant for Emikat -> send deactivation request"
-      );
-      $this->result['message'] = "Study no longer relevant for Emikat.";
       return $this->result;
     }
 
