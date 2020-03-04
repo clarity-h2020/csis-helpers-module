@@ -110,6 +110,7 @@ function processCalculationStatus(batchJobs, authInfo, emikatID, studyUUID) {
     }
     else if (job['values'][4] == "ERR") {
       errors++;
+      finishedJobs++; // just a temporary fix for an Emikat problem with the "description field". Remove this line later
     }
 
     // stop loop here, because all jobs after that one belong to an old calculation
@@ -118,7 +119,7 @@ function processCalculationStatus(batchJobs, authInfo, emikatID, studyUUID) {
     }
   }
 
-  if (errors > 1) {
+  if (errors > 1) { // just a temporary fix for an Emikat problem with the "description field". Set back to 0 later
     printStatus(
       "There have been " + errors + " errors in the calculation process. Please try to adapt your Study settings or contact the site administrators.",
       "messages--error"
