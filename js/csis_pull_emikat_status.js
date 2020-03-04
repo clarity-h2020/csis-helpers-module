@@ -118,7 +118,7 @@ function processCalculationStatus(batchJobs, authInfo, emikatID, studyUUID) {
     }
   }
 
-  if (errors > 0) {
+  if (errors > 1) {
     printStatus(
       "There have been " + errors + " errors in the calculation process. Please try to adapt your Study settings or contact the site administrators.",
       "messages--error"
