@@ -83,7 +83,6 @@ class DefaultForm extends ConfigFormBase {
         'style' => 'height:200px',
       )
     ];
-    dump($config->get('allowed_studies'));
     return parent::buildForm($form, $form_state);
   }
 
