@@ -589,6 +589,7 @@ function csis_helpers_views_post_execute(\Drupal\views\ViewExecutable $view)
   // hide published Studies that cannot be accessed by anonymous users
   else if ($view->id() == "study_group_overview") {
     $results = $view->result;
+    $filter_results = [];
     $account = $view->getUser();
 
     if ($account->isAnonymous()) {
