@@ -492,24 +492,6 @@ function csis_helpers_allowed_values_function(FieldStorageConfig $definition, Co
 }
 
 
-// /**
-//  * Implements hook_group_access().
-//  */
-// function csis_helpers_group_access(\Drupal\Core\Entity\EntityInterface $entity, $operation, \Drupal\Core\Session\AccountInterface $account)
-// {
-//   \Drupal::logger('csis helpers access')->notice($entity->bundle() . ", " . $entity->id());
-//   // No opinion.
-
-//   if ($entity->bundle() == "study") {
-//     if($account->isAnonymous() && !$entity->get("field_publish")->value) {
-//       \Drupal::logger('csis helpers access')->notice("anonymous user shall not see this unpublished study");
-//       return AccessResult::forbidden();
-//     }
-//   }
-//   return AccessResult::neutral();
-// }
-
-
 /**
  * Implements hook_ds_pre_render_alter().
  */
@@ -534,4 +516,92 @@ function csis_helpers_ds_pre_render_alter(array &$layout_render_array, array $co
       }
     }
   }
+}
+
+
+/**
+ * Implements hook_group_access().
+ *
+ * Limits access to Studies:
+ * - anonymous users may only view allowed Studies (mainly DCs)
+ * - registered users may only view published Studies and Studies that they are a member of
+ */
+function csis_helpers_group_access(\Drupal\Core\Entity\EntityInterface $entity, $operation, \Drupal\Core\Session\AccountInterface $account)
+{
+  if ($operation == 'view' && $entity->bundle() == "study") {
+    $config = \Drupal::config('csis_helpers.default');
+    $allowedStudies = $config->get('allowed_studies');
+
+    // if user is anonymous limit access only to allowed Studies
+    if ($account->isAnonymous()) {
+      // if study ID is not in allowed list, than anonymous users should not be able to view it
+      if (!in_array($entity->id(), $allowedStudies)) {
+        return AccessResult::forbidden();
+      }
+    }
+    else {
+      // deny access to unpublished Studies, unless user is a member or an admin
+      $user = \Drupal\user\Entity\User::load($account->id());
+      if (!($user->hasRole("administrator") || $entity->getMember($account))) {
+        if (!$entity->get('field_publish')->value) {
+          return AccessResult::forbidden();
+        }
+      }
+    }
+  }
+  return AccessResult::neutral();
+}
+
+
+/**
+ * Implements hook_views_post_execute().
+ *
+ * Limits access for anonymous users to only allowed Studies (mainly DCs)
+ * This hook blocks anonymous users from accessing GL-steps of restricted studies
+ */
+function csis_helpers_views_post_execute(\Drupal\views\ViewExecutable $view)
+{
+  if ($view->id() == "view_mode_for_gl_step") {
+    $result = $view->result;
+    $account = $view->getUser();
+    $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
+    if ($account->isAnonymous() && $result[0]->nid) {
+      $glStep = Node::load(intval($result[0]->nid));
+      $relations = GroupContent::loadByEntity($glStep);
+
+      // we can skip loop after first iteration, since a GL-Step can have only one group
+      foreach ($relations as $relation) {
+        $groupid = $relation->getGroup()->id();
+
+        $config = \Drupal::config('csis_helpers.default');
+        $allowedStudies = $config->get('allowed_studies');
+        // if study ID is not in allowed list, than anonymous users should not be able to view it
+        if (!in_array($groupid, $allowedStudies)) {
+          dump("anomym nicht erlaubt hier!");
+          $view->result = [];
+        }
+
+        break;
+      }
+    }
+  }
+
+  // hide published Studies that cannot be accessed by anonymous users
+  else if ($view->id() == "study_group_overview") {
+    $results = $view->result;
+    $account = $view->getUser();
+
+    if ($account->isAnonymous()) {
+      foreach ($results as $key => $value) {
+        $config = \Drupal::config('csis_helpers.default');
+        $allowedStudies = $config->get('allowed_studies');
+        // if study ID is in allowed list, keep it in the View results
+        if (in_array($value->id, $allowedStudies)) {
+          $filter_results[$key] = $value;
+        }
+      }
+      $view->result = $filter_results;
+    }
+  }
+
 }

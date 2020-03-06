@@ -3,3 +3,4 @@ csis_helpers:
   emikat_password: "changeit"
   tm_username: "changeit"
   tm_password: "changeit"
+  allowed_studies: []

@@ -63,6 +63,27 @@ class DefaultForm extends ConfigFormBase {
       '#size' => 64,
       '#default_value' => $config->get('tm_password'),
     ];
+    # the options to display in our checkboxes
+    $studies = array(
+      '1' => t('Study 1'),
+      '33' => t('Study 33'),
+      '55' => t('Study 55')
+    );
+
+    $config = $this->config('csis_helpers.default');
+    $form['allowed_studies'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Studies accessible to anonymous users'),
+      '#description' => $this->t('Select Studies that will be available to anonymous users'),
+      '#options' => $this->getStudiesArray(),
+      '#multiple' => 'true',
+      '#default_value' => $config->get('allowed_studies'),
+      '#attributes' => array(
+        'id' => 'edit-select-user',
+        'style' => 'height:200px',
+      )
+    ];
+    dump($config->get('allowed_studies'));
     return parent::buildForm($form, $form_state);
   }
 
@@ -91,7 +112,24 @@ class DefaultForm extends ConfigFormBase {
       $this->config('csis_helpers.default')->set('tm_password', $form_state->getValue('tm_password'));
     }
 
+    $this->config('csis_helpers.default')->set('allowed_studies', $form_state->getValue('allowed_studies'));
+
     $this->config('csis_helpers.default')->save();
+  }
+
+  private function getStudiesArray() {
+    $array = array();
+    $gids = \Drupal::entityQuery('group')
+      ->condition('type', 'study')
+      ->sort('id', 'ASC')
+      ->execute();
+    $studies = \Drupal\group\Entity\Group::loadMultiple($gids);
+    foreach ($studies as $study) {
+      if ($study->get('field_publish')->value) {
+        $array[$study->id()] = $study->id() . " - " . $study->label();
+      }
+    }
+    return $array;
   }
 
 }
