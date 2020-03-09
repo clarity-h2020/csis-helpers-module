@@ -8,6 +8,14 @@ This module is a collection of functions that allow other components to interact
 - updating the progress indicator of the Study
 - notifying Emikat about new Studies and reveicing the EmikatID for each individual Study
 
+### Configuration
+This module provides a settings form in the BE, which can be accessed by navigation to Configuration -> Development -> CSIS module settings (.../admin/config/csis_helpers/default).
+There the credentials for external applications can be set and the list of studies available to anonymous users can be managed.
+
+### Managing Study accessibility
+This module checks for every Study and Study-related content, if a user can access it or not. By default anonymous users cannot access a Study, unless it is marked in the settings form of this module, where a list of all published Studies is available.
+Logged in users have access to all Studies that have been published by the respective Study owners. Also, they logged in users have access to all unpublished Studies that they are a member of. 
+
 ### $studyInfo object
 For this variable certain information about the Study group and the involved group nodes are extracted and provided as JSON in the DrupalSettings. Those DrupalSettings are loaded via inline javascript as JSON and can be accessed by other modules like e.g. the map component. Two different functions are required, since the $entityinfo can be either requested through a Node entity or a Group entity.
 
