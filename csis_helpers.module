@@ -541,8 +541,9 @@ function csis_helpers_group_access(\Drupal\Core\Entity\EntityInterface $entity, 
     }
     else {
       // deny access to unpublished Studies, unless user is a member or an admin
+      // also add bypass to all REST users, who need to access Study detail via REST
       $user = \Drupal\user\Entity\User::load($account->id());
-      if (!($user->hasRole("administrator") || $entity->getMember($account))) {
+      if (!($user->hasRole("administrator") || $user->hasRole("rest") || $entity->getMember($account))) {
         if (!$entity->get('field_publish')->value) {
           return AccessResult::forbidden();
         }
