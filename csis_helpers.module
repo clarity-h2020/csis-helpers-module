@@ -571,6 +571,29 @@ function csis_helpers_ds_pre_render_alter(array &$layout_render_array, array $co
       }
     }
   }
+
+  // hide "trigger calculation" button if Study is not relevant for Emikat (based on Calculation method in Study type)
+  else if ($context['entity']->bundle() == 'study') {
+    if ($context['view_mode'] == 'summary') {
+      $emikatRelevant = false;
+
+      $studyType = Term::load($context['entity']->get('field_study_type')->target_id);
+      $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
+
+      foreach ($calcMethods as $calcMethod) {
+        $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
+
+        if (stripos($calcMethodID, "emikat") !== false) {
+          $emikatRelevant = true;
+          break;
+        }
+      }
+      if (!$emikatRelevant) {
+        unset($vars['content']['header']['dynamic_token_field:group-trigger_calculation']);
+      }
+    }
+  }
+
 }
 
 
