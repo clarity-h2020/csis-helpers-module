@@ -48,6 +48,13 @@
 
         // check if user has permission to trigger Study calculations (ATM just study-owner)
         var triggerPermissions = drupalSettings.csisHelpers.studyInfo.trigger_permissions
+        var calcStatus = drupalSettings.csisHelpers.studyInfo.calculation_status
+
+        if (calcStatus == 0 || calcStatus == 2) {
+          console.log("disabling link");
+          $(this).find("a").removeAttr("href");
+          $(this).find("a").addClass("disabled");
+        }
 
         if (triggerPermissions == 0) {
           $(this).remove();

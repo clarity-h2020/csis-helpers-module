@@ -171,6 +171,40 @@ function csis_helpers_emikat_trigger_form_submit($form, FormStateInterface $form
 }
 
 /**
+ * Implements hook_block_access().
+ * Hide the "Study details" block unless it's an Emikat-relevant Study.
+ * In the future we might add more such Study checklists, but since each external
+ * system will require different data, each Checklist must be created as a seperate
+ * block and hidden for all other non-relevant Studies
+ */
+function csis_helpers_block_access(\Drupal\block\Entity\Block $block, $operation, \Drupal\Core\Session\AccountInterface $account)
+{
+  // this Checklist block is only for Emikat-relevant Studies, other Studies should not show this block
+  if ($operation == 'view' && $block->getPluginId() == 'views_block:study_group_overview-block_3') {
+    // load the Study group and check the calculation method based on the Study type
+    $group = \Drupal::routeMatch()->getParameter('group');
+    if ($group && $group->bundle() == "study") {
+      $studyType = Term::load($group->get('field_study_type')->target_id);
+      $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
+
+      foreach ($calcMethods as $calcMethod) {
+        $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
+
+        // if the calculation method contains "emikat", the block can be displayed
+        if (stripos($calcMethodID, "emikat") !== false) {
+          return AccessResult::neutral();
+        }
+      }
+      // hide this block, since the Study is not calculated in Emikat
+      return AccessResult::forbidden();
+    }
+  }
+
+  // default access result
+  return AccessResult::neutral();
+}
+
+/**
  * implementation of hook_form_alter() for Datapackage selection form in Study
  * "group_study_introduction_form"
  */
@@ -343,7 +377,7 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
 function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity)
 {
   // trigger external apps (Emikat, TM) only based on fitting Study type and on live website
-  if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() != "https://csis.myclimateservice.eu") {
+  if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() == "https://csis.myclimateservice.eu") {
 
     $studyType = Term::load($entity->get('field_study_type')->target_id);
     $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
