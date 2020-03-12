@@ -281,6 +281,7 @@ class StudyInfoGenerator {
       'is_anonymous' => $isAnonymous,
       'is_member' => $isMember,
       'write_permissions' => ($has_user_special_roles ? 1 : 0),
+      'trigger_permissions' => ($has_user_special_roles ? 1 : 0),
 
     );
     return $groupEntityInfo;

@@ -17,7 +17,6 @@ class EmikatHelperFunctions {
 
   /**
    * This function checks based on relevant fields whether Emikat should be triggered or not
-   * and if recalculation on Emikat-side is necessary.
    *
    * As decided in https://github.com/clarity-h2020/csis-helpers-module/issues/12, it will
    * no longer be possible to change the Study type once it has been selected. Therefore,
@@ -26,37 +25,38 @@ class EmikatHelperFunctions {
    * Considered "relevant" are for now the following fields:
    * - Study area
    * - referenced Data package
-   * - Study title and goal (but they don't require recalculations in case they are changed)
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    * @return integer status code
    */
-  private function checkStudyChanges(\Drupal\Core\Entity\EntityInterface $entity) {
+  public function checkStudyChanges(\Drupal\Core\Entity\EntityInterface $entity) {
 
     /*
     status codes:
-      0 -> don't trigger Emikat
-      1 -> trigger Emikat, recalculation not required
-      2 -> trigger Emikat, recalculation required
+      0 -> Study not yet ready for calculations to be started
+      1 -> trigger Emikat
+      2 -> calculations in Emikat are running (not set in this function)
+      3 -> calculations in Emikat are completed (not set in this function)
     */
 
-    $status = 0;
+    $currentStatus = $entity->get('field_calculation_status')->value;
+
+    if ($currentStatus == 2) {
+      return $currentStatus;
+    }
+
+    $status = $currentStatus;
 
     // if Study was just created it cannot yet have all necessary data since intial form doesn't provide those needed fields
     // likewise don't trigger Emikat if some relevant fields are still missing
     if ($entity->isNew() || $entity->get('field_study_type')->isEmpty() || $entity->get("field_study_goa")->isEmpty() || $entity->get("field_area")->isEmpty() || $entity->field_data_package->isEmpty()) {
+      $status = 0;
+      $entity->set("field_calculation_status", $status);
       return $status;
     }
 
-    // check relevant fields and set status
-    if ($entity->label() != $entity->original->label()) {
-      $status = 1;
-    }
-    else if ($entity->get("field_study_goa")->getString() != $entity->original->get("field_study_goa")->getString()) {
-      $status = 1;
-    }
     else if ($entity->get("field_area")->getString() != $entity->original->get("field_area")->getString()) {
-      $status = 2;
+      $status = 1;
     }
 
     // since it's a Reference field, check data package field contents before trying to access them
@@ -64,9 +64,10 @@ class EmikatHelperFunctions {
     $datapackage = ($entity->field_data_package->isEmpty() ? "empty" : $entity->field_data_package->entity->label());
     $datapackageOrig = ($entity->original->field_data_package->isEmpty() ? "empty" : $entity->original->field_data_package->entity->label());
     if ($datapackage != $datapackageOrig) {
-      $status = 2;
+      $status = 1;
     }
 
+    $entity->set("field_calculation_status", $status);
     return $status;
   }
 
@@ -79,7 +80,8 @@ class EmikatHelperFunctions {
   public function triggerEmikat(\Drupal\Core\Entity\EntityInterface $entity) {
 
     // check whether or not relevant changes have been made in the Study
-    $statusCode = $this->checkStudyChanges($entity);
+    //$statusCode = $this->checkStudyChanges($entity);
+    $statusCode = $entity->get('field_calculation_status')->value;
 
     // Don't notify Emikat if nothing relevant was changed
     if ($statusCode == 0) {
@@ -117,12 +119,6 @@ class EmikatHelperFunctions {
       " \nCSIS_CITY: " . $city .
       " \nCSIS_CITY_CODE: " . $cityCode;
 
-    // let Emikat know whether the changes in the Study require a recalculation (only used in POST requests, since PUT sends new Studies)
-    $forceRecalculate = false;
-    if ($statusCode == 2) {
-      $forceRecalculate = true;
-    }
-
     // ---------- PUT request with new Study ----------
     if (!$emikatID) {
       //create payload
@@ -135,9 +131,10 @@ class EmikatHelperFunctions {
         )
       );
       $emikatID = $this->sendPutRequest($payload, $auth, $studyID);
-      // store the given ID from Emikat and set calculation status to 1 (= active/ongoing)
+      // store the given ID from Emikat and set calculation status to 2 (= active/ongoing)
       $entity->set("field_emikat_id", $emikatID);
-      $entity->set("field_calculation_status", 1);
+      $entity->set("field_calculation_status", 2);
+      $entity->save();
     }
     // -----------------------------------------------------
     // ---------- POST request with updated Study ----------
@@ -148,22 +145,20 @@ class EmikatHelperFunctions {
           "name" => $entity->label() . " | " . $studyID,
           "description" => $description,
           "status" => "AKT",
-          "forceRecalculate" => $forceRecalculate
+          "forceRecalculate" => true
         )
       );
       $success = $this->sendPostRequest($payload, $auth, $emikatID);
 
       if ($success) {
-        // set calculation status to 1 (= active/ongoing) if recalculation needed
-        if ($forceRecalculate) {
-          $entity->set("field_calculation_status", 1);
-        }
+        // set calculation status to 2 (= active/ongoing)
+        $entity->set("field_calculation_status", 2);
+        $entity->save();
         // generate status messages for FE and BE
         \Drupal::logger('EmikatHelperFunctions')->notice(
           "Emikat was notified via POST of updates in Study " . $studyID
-          . " with Recalculate flag set to: " . var_export($forceRecalculate, true)
         );
-        $this->result['message'] = "Emikat was notified of updates in Study with Recalculate flag set to: " . var_export($forceRecalculate, true);
+        $this->result['message'] = "Emikat was notified of updates in Study";
       }
     }
 

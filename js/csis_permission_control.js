@@ -42,6 +42,18 @@
         }
 
       });
+
+      $('.token-field-check-trigger', context).once('checkMember').each(function () {
+        //console.debug('checking member');
+
+        // check if user has permission to trigger Study calculations (ATM just study-owner)
+        var triggerPermissions = drupalSettings.csisHelpers.studyInfo.trigger_permissions
+
+        if (triggerPermissions == 0) {
+          $(this).remove();
+        }
+
+      });
     }
   };
 })(jQuery, Drupal, drupalSettings);

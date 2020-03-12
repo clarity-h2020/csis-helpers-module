@@ -9,7 +9,7 @@
     var calculationStatus = drupalSettings.csisHelpers.studyInfo.calculation_status;
 
     // if calculation is active ( == 1) periodically pull the status until calculation is done or has failed
-    if (calculationStatus == 1) {
+    if (calculationStatus == 2) {
       console.log("pulling calculation status from Emikat.");
 
       var emikatID = drupalSettings.csisHelpers.studyInfo.study_emikat_id;
@@ -163,7 +163,7 @@ function updateCalcStatusInStudy(csrfToken, studyUUID) {
       'id': studyUUID,
       'attributes': {
         'field_calculation_status': {
-          'value': 0
+          'value': 3
         }
       }
     }

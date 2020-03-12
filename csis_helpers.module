@@ -115,13 +115,67 @@ function csis_helpers_form_group_form_alter(&$form, $form_state, $form_id)
   if ($entity->bundle() == "study" && $form['form_id']['#value'] != "group_study_edit_form") {
     $form['actions']['delete']['#access'] = false;
   }
+
+  // on Study Trigger-form submit trigger calculations in external application
+  if ($entity->bundle() == "study" && $form['form_id']['#value'] == "group_study_trigger_form") {
+
+    $studyType = Term::load($entity->get('field_study_type')->target_id);
+    $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
+
+    foreach ($calcMethods as $calcMethod) {
+      $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
+
+      if (stripos($calcMethodID, "emikat") !== false) {
+        $statusCode = $entity->get('field_calculation_status')->value;
+
+        if ($statusCode == 0 || $statusCode == 2) {
+          $form['text']['#markup'] = t('Study not yet ready for calculations or previous calculations have not yet finished.');
+          $form['actions']['submit']['#value'] = t('Cancel');
+        } else {
+          foreach (array_keys($form['actions']) as $action) {
+            if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
+              $form['text']['#markup'] = t(
+                'Your Study now contains all required information. If you wish, you can now trigger the calculation.
+                Depending on the current workload and the Study parameters, calculation results may take a couple
+                of minutes or hours.'
+              );
+              $form['actions']['submit']['#value'] = t('Trigger calculations');
+              $form['actions'][$action]['#submit'][] = 'csis_helpers_emikat_trigger_form_submit';
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * This function triggers the Study calculations in external services (e.g. Emikat).
+ *
+ * @param [type] $form
+ * @param FormStateInterface $form_state
+ * @return void
+ */
+function csis_helpers_emikat_trigger_form_submit($form, FormStateInterface $form_state)
+{
+  $entity = $form_state->GetFormObject()->getEntity();
+  /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
+  $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
+  $result = $emikatService->triggerEmikat($entity);
+
+  //print result message to admins and developers directly to FE
+  $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+  if ($user->hasRole('administrator') || $user->hasRole('developer')) {
+    \Drupal::messenger()->addMessage($result['message'], $result['type']);
+  }
 }
 
 /**
  * implementation of hook_form_alter() for Datapackage selection form in Study
  * "group_study_introduction_form"
  */
-function csis_helpers_form_group_study_data_form_alter(&$form, $form_state, $form_id) {
+function csis_helpers_form_group_study_data_form_alter(&$form, $form_state, $form_id)
+{
   // adds a preview of the selected data package
   $form['#attached']['library'][] = 'csis_helpers/dp_selector_helpers';
 
@@ -162,35 +216,6 @@ function csis_helpers_preprocess_views_view(&$variables)
 
   $variables['#attached']['library'][] = 'csis_helpers/progress_indicator';
 }
-
-// /**
-//  * Implements hook_views_pre_view().
-//  * We use this to alter the FILTER CRITERIA for the data package selector EB
-//  * DOES NOT WORK SINCE WE CANNOT GET THE GROUP ID INSIDE THE-EB WIDGET!!!
-//  */
-// function csis_helpers_views_pre_view(\Drupal\views\ViewExecutable $view, $display_id, array &$args)
-// {
-//   if ($view->id() == 'data_packages' && $view->current_display == 'browser') {
-//     $filters = $view->display_handler->getOption('filters');
-//     $arguments = $view->display_handler->getOption('arguments');
-//     $current_path = \Drupal::service('path.current')->getPath();
-//     dump($current_path);
-//     //dump($view->display_handler);
-//     dump($arguments);
-//     if ($filters['field_calculation_methods_target_id']) {
-//       foreach ($filters['field_calculation_methods_target_id']['value'] as $key => $filter) {
-//         // here we would need the calculation methods of the study, which we don't get
-//         // if ($key == 2218) {
-//         //   unset($filters['field_calculation_methods_target_id']['value'][$key]);
-//         // }
-//       }
-//     }
-//     $view->display_handler->overrideOption('filters', $filters);
-//   }
-//   // $view->display['default']->handler->options['filters']['field_raion_value']['value']  = array(
-//   //   'val1' => 'val1'
-//   // );
-// }
 
 function csis_js_alter(&$javascript, \Drupal\Core\Asset\AttachedAssetsInterface $assets)
 {
@@ -308,7 +333,9 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
 
 /**
  * Implements hook_entity_presave().
- * Needed currently for triggering Emikat or the TM once a Study is advanced enough or relevant information has changed
+ * This is the automated Study calculation trigger. Currently used only for the TM.
+ * For Emikat we just update whether or not a Study (re)calculation can be triggered
+ * by the Study owner
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  * @return Drupal\node\Entity\Node[]
@@ -316,7 +343,7 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
 function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity)
 {
   // trigger external apps (Emikat, TM) only based on fitting Study type and on live website
-  if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() == "https://csis.myclimateservice.eu") {
+  if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() != "https://csis.myclimateservice.eu") {
 
     $studyType = Term::load($entity->get('field_study_type')->target_id);
     $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
@@ -341,13 +368,7 @@ function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity
       else if (stripos($calcMethodID, "emikat") !== false) {
         /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
         $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
-        $result = $emikatService->triggerEmikat($entity);
-
-        //print result message to admins and developers directly to FE
-        $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
-        if ($user->hasRole('administrator') || $user->hasRole('developer')) {
-          \Drupal::messenger()->addMessage($result['message'], $result['type']);
-        }
+        $statusCode = $emikatService->checkStudyChanges($entity);
         break;
       }
     }
@@ -443,7 +464,8 @@ function extractSpatialExtent($entity)
 /**
  * Implements hook_cron().
  */
-function csis_helpers_cron() {
+function csis_helpers_cron()
+{
   $interval = 60 * 60 * 24; // Approx one day
   $last_run = \Drupal::state()->get('csis_helpers.emikat_last_run', 0);
   $item = new \stdClass(); // create a dummy object for the queue/service
@@ -457,7 +479,6 @@ function csis_helpers_cron() {
   else {
     \Drupal::service('csis_helpers.testing')->checkTestResults($item);
   }
-
 }
 
 /**
@@ -538,8 +559,7 @@ function csis_helpers_group_access(\Drupal\Core\Entity\EntityInterface $entity, 
       if (!in_array($entity->id(), $allowedStudies)) {
         return AccessResult::forbidden();
       }
-    }
-    else {
+    } else {
       // deny access to unpublished Studies, unless user is a member or an admin
       // also add bypass to all REST users, who need to access Study detail via REST
       $user = \Drupal\user\Entity\User::load($account->id());
@@ -605,5 +625,4 @@ function csis_helpers_views_post_execute(\Drupal\views\ViewExecutable $view)
       $view->result = $filter_results;
     }
   }
-
 }
