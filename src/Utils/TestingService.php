@@ -16,6 +16,8 @@ class TestingService {
 
   /**
    * Send test study to Emikat.
+   * 
+   * @return boolean true if Study update was successfully sent to Emikat, false otherwise
    */
   public function sendTestStudy($data) {
     $entity = Group::load($data->gid); // our test study
@@ -67,14 +69,17 @@ class TestingService {
       );
       $entity->save();
     }
+
+    return $success;
   }
 
 
   /**
    * Checks the Emikat results for the given test study
    *
-   * @param object $data
-   * @return void
+   * @param object $data object containing the Group ID of the test Study
+   * @return array $results contains details about the batchjobs and the number of total
+   * warnings/errors
    */
   public function checkTestResults($data)
   {
@@ -93,9 +98,13 @@ class TestingService {
     $auth = array($config->get('emikat_username'), $config->get('emikat_password'));
 
     // check available batchjobs for status and number of results
-    $warnings += $this->checkBatchjobs($emikatID, $auth);
+    $results = $this->checkBatchjobs($emikatID, $auth);
+    $warnings += $results[1];
 
     // check if the results for the HC local effects table are there
+    // should there be any warnings for the tables, don't add that to the results,
+    // since CI testing component can test those tables on its own. We only do this
+    // for the internal Drupal logging
     $warnings += $this->checkTables($emikatID, $auth);
 
     if ($warnings == 0) {
@@ -107,6 +116,8 @@ class TestingService {
         "Checks showed " . $warnings . " problem(s) for the test study. Please check Emikat."
       );
     }
+
+    return $results;
   }
 
 
@@ -153,14 +164,15 @@ class TestingService {
    *
    * @param string $emikatID
    * @param array $auth
-   * @return int number of warnings found
+   * @return array batchjob details and the number of warnings found
    */
   private function checkBatchjobs($emikatID, $auth) {
     $client = \Drupal::httpClient();
-    $warnings = 0;
+    $warningsCount = 0;
+    $batchjobs = array();
     try {
       $request = $client->get(
-        "https://service.emikat.at/EmiKatTst/api/scenarios/" . $emikatID . "/feature/tab.AD_V_BATCH_IN_QUEUE.1710/table/data?rownum=20&filter=SZM_SZENARIO_REF=" . $emikatID . "&sortby=Oid%20DESC",
+        "https://service.emikat.at/EmiKatTst/api/scenarios/" . $emikatID . "/feature/tab.AD_V_BATCH_IN_QUEUE.1710/table/data?rownum=30&filter=SZM_SZENARIO_REF=" . $emikatID . "&sortby=Oid%20DESC",
         array(
           'auth' => $auth,
           'headers' => array(
@@ -170,14 +182,28 @@ class TestingService {
       );
       $response = json_decode($request->getBody(), true);
 
-      foreach ($response["rows"] as $row) {
-        if ($row["values"][4] != "OK") {
-          $warnings += 1;
+      foreach ($response["rows"] as $key => $row) {
+        $batchjobs[$key] = array(
+          "id" => $row["values"][0],
+          "name" => $row["values"][1],
+          "status" => $row["values"][4],
+          "message" => $row["values"][6],
+          "class" => "batchjob-ok"
+        );
+
+        if ($row["values"][4] == "ERR") {
+          $warningsCount += 1;
+          $batchjobs[$key]["class"] = "batchjob-error";
+        }
+        else if ($row["values"][4] != "OK") {
+          $warningsCount += 1;
+          $batchjobs[$key]["class"] = "batchjob-warning";
         }
         // for all Groovy batchjobs raise a warning if it returns 0 results
         else if ($row["values"][5] == "Groovy") {
           if ($row["values"][6] == "Result=0") {
-            $warnings += 1;
+            $warningsCount += 1;
+            $batchjobs[$key]["class"] = "batchjob-warning";
           }
         }
 
@@ -187,7 +213,7 @@ class TestingService {
           break;
         }
       }
-      return $warnings;
+      return array ($batchjobs, $warningsCount);
 
     } catch (RequestException $e) {
       // generate error messages for BE and FE and set $success to false
@@ -197,7 +223,7 @@ class TestingService {
           '%error' => $e->getMessage(),
         )
       );
-      return $warnings + 1;
+      return array ($batchjobs, $warningsCount + 1);
     }
   }
 

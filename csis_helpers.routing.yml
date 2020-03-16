@@ -9,3 +9,18 @@ csis_helpers.default_form:
   options:
     _admin_route: TRUE
 
+csis_helpers.check_emikat_results:
+  path: '/maintenance/check-emikat-results'
+  defaults:
+    _controller: '\Drupal\csis_helpers\Controller\StudyCalculationController::checkEmikatResults'
+    _title: 'Check Emikat results for test Study'
+  requirements:
+    _role: 'administrator'
+
+csis_helpers.trigger_emikat_test:
+  path: '/maintenance/trigger-emikat-test'
+  defaults:
+    _controller: '\Drupal\csis_helpers\Controller\StudyCalculationController::triggerEmikatTest'
+    _title: 'Trigger Emikat calculations for test Study'
+  requirements:
+    _role: 'administrator'

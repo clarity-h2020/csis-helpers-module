@@ -1,0 +1,15 @@
+<h4>{{title}}</h4>
+
+<div>
+  {% if result %}
+    <span class="trigger-success">
+      Updates in Test Study were successfully sent to Emikat.
+    </span>
+  {% else %}
+    <span class="trigger-failure">
+      Error: Couldn't send Study updates to Emikat. Maybe Emikat is down?
+    </span>
+  {% endif %}
+</div>
+
+

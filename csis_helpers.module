@@ -34,6 +34,21 @@ function console_log($output, $with_script_tags = true)
 }
 
 /**
+ *  Implements hook_theme().
+ */
+function csis_helpers_theme($existing, $type, $theme, $path)
+{
+  return array(
+    "emikat_results" => array(
+      "variables" => array("items" => array(), "title" => "", "warningCount" => "")
+    ),
+    "emikat_trigger" => array(
+      "variables" => array("title" => "", "result" => "")
+    )
+  );
+}
+
+/**
  * FIXME: This method is invoked for each entity on the page and thus overwrites all other entity Infos
  */
 function csis_helpers_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode)
@@ -495,25 +510,27 @@ function extractSpatialExtent($entity)
   }
 }
 
-/**
- * Implements hook_cron().
- */
-function csis_helpers_cron()
-{
-  $interval = 60 * 60 * 24; // Approx one day
-  $last_run = \Drupal::state()->get('csis_helpers.emikat_last_run', 0);
-  $item = new \stdClass(); // create a dummy object for the queue/service
-  $item->gid = 60; // The ID of our special Study group reserved for tests
+// /**
+//  * Implements hook_cron().
+//  * Instead of running these tests via CRON, use the StudyCalculationController methods
+//  * to trigger these tests via external CI testing services
+//  */
+// function csis_helpers_cron()
+// {
+//   $interval = 60 * 60 * 24; // Approx one day
+//   $last_run = \Drupal::state()->get('csis_helpers.emikat_last_run', 0);
+//   $item = new \stdClass(); // create a dummy object for the queue/service
+//   $item->gid = 60; // The ID of our special Study group reserved for tests
 
-  // either run a new calculation every 24 hours or check if there are currently results available
-  if ((REQUEST_TIME - $last_run) >= $interval) {
-    \Drupal::service('csis_helpers.testing')->sendTestStudy($item);
-    \Drupal::state()->set('csis_helpers.emikat_last_run', REQUEST_TIME);
-  }
-  else {
-    \Drupal::service('csis_helpers.testing')->checkTestResults($item);
-  }
-}
+//   // either run a new calculation every 24 hours or check if there are currently results available
+//   if ((REQUEST_TIME - $last_run) >= $interval) {
+//     \Drupal::service('csis_helpers.testing')->sendTestStudy($item);
+//     \Drupal::state()->set('csis_helpers.emikat_last_run', REQUEST_TIME);
+//   }
+//   else {
+//     \Drupal::service('csis_helpers.testing')->checkTestResults($item);
+//   }
+// }
 
 /**
  * Generates list with allowed options for this field based on the linked ParagraphType "Study presets" for the "Study" Group

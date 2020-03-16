@@ -1,0 +1,17 @@
+<h4>{{title}}</h4>
+
+<div>
+  There have been <span class="total-warning-count">{{ warningCount }}</span> problem(s)
+  in a total of <span class="total-batchjob-count">{{ items|length }}</span> batchjobs.
+</div>
+
+<ul class="batchjobs">
+  {% for item in items %}
+    <li class="{{ item.class }}">
+      <b>ID:</b> {{ item.id }},
+      <b>Name:</b> {{ item.name }},
+      <b>Status:</b> {{ item.status }},
+      <b>Message:</b> {{ item.message }}
+    </li>
+  {% endfor %}
+</ul>
