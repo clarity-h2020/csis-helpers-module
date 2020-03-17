@@ -21,11 +21,19 @@ class StudyCalculationController extends ControllerBase
     $item = new \stdClass(); // create a dummy object for the queue/service
     $item->gid = 60; // The ID of our special Study group reserved for tests
 
-    /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
+    /** @var \Drupal\csis_helpers\Utils\TestingService $testingService */
     $testingService = \Drupal::service('csis_helpers.testing');
 
-    // returns true if Study updates were successfully sent to Emikat
-    $result = $testingService->sendTestStudy($item);
+    // returns true if calculations for this Study are still running
+    $calculationRunning = $testingService->isCalculationRunning($item);
+    if (!$calculationRunning) {
+      // returns true if Study updates were successfully sent to Emikat
+      $result = $testingService->sendTestStudy($item);
+    }
+    else {
+      // since calculation is still running, EmikatTrigger did not fire
+      $result = false;
+    }
 
     return array(
       '#theme' => 'emikat_trigger',
@@ -46,7 +54,7 @@ class StudyCalculationController extends ControllerBase
     $item = new \stdClass(); // create a dummy object for the queue/service
     $item->gid = 60; // The ID of our special Study group reserved for tests
 
-    /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
+    /** @var \Drupal\csis_helpers\Utils\TestingService $testingService */
     $testingService = \Drupal::service('csis_helpers.testing');
 
     // returns the batchjobs as an array + the total number of errors/warnings found

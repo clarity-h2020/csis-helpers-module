@@ -16,7 +16,7 @@ class TestingService {
 
   /**
    * Send test study to Emikat.
-   * 
+   *
    * @return boolean true if Study update was successfully sent to Emikat, false otherwise
    */
   public function sendTestStudy($data) {
@@ -120,6 +120,34 @@ class TestingService {
     return $results;
   }
 
+  /**
+   * Checks Emikat batchjobs to see whether or not calculations for this Study have finished yet
+   *
+   * @param object $data object containing the Group ID of the test Study
+   * @return boolean true if calculations are still running, false otherwise
+   */
+  public function isCalculationRunning($data)
+  {
+    $entity = Group::load($data->gid); // our test study
+    $emikatID = $entity->get("field_emikat_id")->getString();
+
+    // get credentials for Emikat server
+    $config = \Drupal::config('csis_helpers.default');
+    $auth = array($config->get('emikat_username'), $config->get('emikat_password'));
+
+    // get available batchjobs and check if any of them is still running or in "INI" state
+    $results = $this->checkBatchjobs($emikatID, $auth);
+
+    foreach ($results[0] as $result) {
+      if ($result['status'] == "INI" || $result['status'] == "RUN") {
+        // some of the batchjobs are not completed yet => calculations for this Study still active
+        return true;
+      }
+    }
+
+    // all batchjobs have finished => calculations are completed for this Study
+    return false;
+  }
 
   /**
    * Sends a POST request to Emikat to update an existing Study
