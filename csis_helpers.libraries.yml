@@ -60,6 +60,9 @@ progress_indicator:
 include_in_report:
   js:
     js/csis_include_in_report.js:
+  css:
+    layout:
+      css/csis_include_in_report.css: {}
   dependencies:
     - core/jquery
     - core/jquery.form
