@@ -15,7 +15,7 @@ csis_helpers.check_emikat_results:
     _controller: '\Drupal\csis_helpers\Controller\StudyCalculationController::checkEmikatResults'
     _title: 'Check Emikat results for test Study'
   requirements:
-    _role: 'administrator'
+    _role: 'administrator + testing'
 
 csis_helpers.trigger_emikat_test:
   path: '/maintenance/trigger-emikat-test'
@@ -23,4 +23,4 @@ csis_helpers.trigger_emikat_test:
     _controller: '\Drupal\csis_helpers\Controller\StudyCalculationController::triggerEmikatTest'
     _title: 'Trigger Emikat calculations for test Study'
   requirements:
-    _role: 'administrator'
+    _role: 'administrator + testing'
