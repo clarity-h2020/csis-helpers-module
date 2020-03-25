@@ -106,6 +106,25 @@ function csis_helpers_form_node_form_alter(&$form, $form_state, $form_id)
     $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
   }
 
+  if ($entity->bundle() == "gl_step") {
+    // deny access if user is not admin, or if auth_user is not member of group or form id is not "node_gl_step_introduction_form"
+    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    $relations = GroupContent::loadByEntity($entity);
+    $userAccount = \Drupal::currentUser();
+    if (!($user->hasRole("administrator") || $user->hasRole("editor"))) {
+      foreach ($relations as $relation) {
+        if (!$relation->getGroup()->getMember($userAccount) || $form_id != "node_gl_step_introduction_form") {
+          $form['#access'] = FALSE;
+          $form['#markup'] = t('Access Denied.');
+          $form['#cache'] = [
+            'contexts' => [],
+            'max-age' => 0,
+          ];
+        }
+      }
+    }
+  }
+
   // prevent page-reload /redirect for the edit-form of Report images (unless user is on the summary page)
   if ($form_id == "node_report_image_edit_form" && \Drupal::request()->query->has('destination')) {
     $pathComponents = explode("/", \Drupal::request()->query->get('destination'));
