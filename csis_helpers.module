@@ -40,7 +40,7 @@ function csis_helpers_theme($existing, $type, $theme, $path)
 {
   return array(
     "emikat_results" => array(
-      "variables" => array("items" => array(), "title" => "", "warningCount" => "")
+      "variables" => array("items" => array(), "title" => "", "warningCount" => "", "calcStarted" => "")
     ),
     "emikat_trigger" => array(
       "variables" => array("title" => "", "result" => "")
@@ -590,26 +590,28 @@ function csis_helpers_ds_pre_render_alter(array &$layout_render_array, array $co
   }
 
   // hide "trigger calculation" button if Study is not relevant for Emikat (based on Calculation method in Study type)
-  else if ($context['entity']->bundle() == 'study') {
-    if ($context['view_mode'] == 'summary') {
-      $emikatRelevant = false;
+  // not necessary as long as the calculation button will only be shown in the Checklist sidebar (since sidebar
+  // is already shown/hidden based on Study Type)
+  // else if ($context['entity']->bundle() == 'study') {
+  //   if ($context['view_mode'] == 'summary') {
+  //     $emikatRelevant = false;
 
-      $studyType = Term::load($context['entity']->get('field_study_type')->target_id);
-      $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
+  //     $studyType = Term::load($context['entity']->get('field_study_type')->target_id);
+  //     $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
 
-      foreach ($calcMethods as $calcMethod) {
-        $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
+  //     foreach ($calcMethods as $calcMethod) {
+  //       $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
 
-        if (stripos($calcMethodID, "emikat") !== false) {
-          $emikatRelevant = true;
-          break;
-        }
-      }
-      if (!$emikatRelevant) {
-        unset($vars['content']['header']['dynamic_token_field:group-trigger_calculation']);
-      }
-    }
-  }
+  //       if (stripos($calcMethodID, "emikat") !== false) {
+  //         $emikatRelevant = true;
+  //         break;
+  //       }
+  //     }
+  //     if (!$emikatRelevant) {
+  //       unset($vars['content']['header']['dynamic_token_field:group-trigger_calculation']);
+  //     }
+  //   }
+  // }
 
 }
 

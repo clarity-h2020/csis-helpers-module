@@ -1,8 +1,14 @@
+{% set newdate = calcStarted / 1000 %}
+
 <h4>{{title}}</h4>
 
 <div>
   There have been <span class="total-warning-count">{{ warningCount }}</span> problem(s)
   in a total of <span class="total-batchjob-count">{{ items|length }}</span> batchjobs.
+</div>
+<br>
+<div data-timestamp="{{newdate}}">
+  Calculation was started at: {{ newdate |date("m.d.Y H:i:s")}}
 </div>
 
 <ul class="batchjobs">

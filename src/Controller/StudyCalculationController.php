@@ -65,6 +65,7 @@ class StudyCalculationController extends ControllerBase
       '#theme' => 'emikat_results',
       '#items' => $batchjobs,
       '#warningCount' => $results[1],
+      '#calcStarted' => $results[2],
       '#title' => 'Results for Emikat test Study ' . $item->gid
     );
   }

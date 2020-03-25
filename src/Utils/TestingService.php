@@ -79,7 +79,7 @@ class TestingService {
    *
    * @param object $data object containing the Group ID of the test Study
    * @return array $results contains details about the batchjobs and the number of total
-   * warnings/errors
+   * warnings/errors and time when calculation was started
    */
   public function checkTestResults($data)
   {
@@ -192,11 +192,12 @@ class TestingService {
    *
    * @param string $emikatID
    * @param array $auth
-   * @return array batchjob details and the number of warnings found
+   * @return array batchjob details, the number of warnings found and time when calculation started
    */
   private function checkBatchjobs($emikatID, $auth) {
     $client = \Drupal::httpClient();
     $warningsCount = 0;
+    $calcStarted = 0;
     $batchjobs = array();
     try {
       $request = $client->get(
@@ -238,10 +239,11 @@ class TestingService {
         // break loop once last batchjob of current calculation is reached
         // Note: the title of that batchjob might change in the future!
         if ($row["values"][1] == "Rebuild Table CLY_PARAMETER#1976") {
+          $calcStarted = $row["values"][10];
           break;
         }
       }
-      return array ($batchjobs, $warningsCount);
+      return array ($batchjobs, $warningsCount, $calcStarted);
 
     } catch (RequestException $e) {
       // generate error messages for BE and FE and set $success to false
