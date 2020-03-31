@@ -20,6 +20,14 @@ class TestingService {
    * @return boolean true if Study update was successfully sent to Emikat, false otherwise
    */
   public function sendTestStudy($data) {
+
+    if (\Drupal::request()->getSchemeAndHttpHost() != "https://csis.myclimateservice.eu") {
+      \Drupal::logger('csis_helpers_testing')->notice(
+        "Automated testing not active on local or development instances of CSIS."
+      );
+      return false;
+    }
+
     $entity = Group::load($data->gid); // our test study
 
     // extract all necessary field information for Request body
