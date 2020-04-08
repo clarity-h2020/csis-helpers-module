@@ -130,6 +130,7 @@ var groupContentTemplate = {
 
 				// only take screenshot if Element	has height and width, otherwise stored file cannot be displayed properly
 				// .eq(0) gets the 1st jQuery object while .get(0) get the 1st DOM Element.
+				var sleepTime = 0;
 				if ($('.field.field--name-field-react-mount').height() > 0 || $('iframe').eq(0).height() > 0) {
 					// create screenshot and send POST request for it via JSON:API
 
@@ -171,6 +172,8 @@ var groupContentTemplate = {
 							//eea tool
 							elementToPrint = elementToPrint.getElementById('dashboard-spacer');
 						} else {
+							//wait for transition
+							sleepTime = 500;
 							elementToPrint = elementToPrint.getElementById('root');
 						}
 					}
@@ -182,9 +185,10 @@ var groupContentTemplate = {
 						logging: false,
 						foreignObjectRendering: isScenarioInChrome,
 						scale: imageScale,
-						onclone: function(doc) {
+						onclone: async function(doc) {
 							// the css property translate cannot be handled properly by html2canvas, if negative values are used and that is the case, if overlay layers are used.
 							// So replace the translate3d property with the top and left property. It was assumed that the third argument of translate3d is 0px
+							await Sleep(sleepTime);
 							replaceTranslate3dStyle(doc);
 						}
 					}).then((canvas) => {
@@ -204,6 +208,10 @@ var groupContentTemplate = {
 		}
 	};
 })(jQuery, Drupal, drupalSettings);
+
+function Sleep(milliseconds) {
+	return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
 
 /**
  * When foreign object rendering is used (MCDA App in chrome), the images will only be rendered,
@@ -280,13 +288,16 @@ function replaceTranslate3dStyleByElement(element) {
 				element.style['top'] = trans_y + 'px';
 			}
 		}
+		if (element.style['transition'] != null) {
+			element.style['transition'] = null;
+		}
 		if (
 			getComputedStyle(element)['opacity'] != null &&
 			getComputedStyle(element)['opacity'] != '' &&
 			parseFloat(getComputedStyle(element)['opacity']) != NaN
 		) {
 			if (element.className == '-loading') {
-				element.style['visibility'] = 'hidden';
+				//				element.style['visibility'] = 'hidden';
 			} else if (parseFloat(getComputedStyle(element)['opacity']) == 0.0) {
 				element.style['visibility'] = 'hidden';
 			}
