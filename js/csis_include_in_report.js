@@ -296,9 +296,7 @@ function replaceTranslate3dStyleByElement(element) {
 			getComputedStyle(element)['opacity'] != '' &&
 			parseFloat(getComputedStyle(element)['opacity']) != NaN
 		) {
-			if (element.className == '-loading') {
-				//				element.style['visibility'] = 'hidden';
-			} else if (parseFloat(getComputedStyle(element)['opacity']) == 0.0) {
+			if (parseFloat(getComputedStyle(element)['opacity']) == 0.0) {
 				element.style['visibility'] = 'hidden';
 			}
 		}
