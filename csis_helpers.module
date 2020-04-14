@@ -106,7 +106,7 @@ function csis_helpers_form_node_form_alter(&$form, $form_state, $form_id)
     $form['#attached']['drupalSettings']['csisHelpers']['entityinfo'] = csis_helpers_node_entity_info($entity);
   }
 
-  if ($entity->bundle() == "gl_step") {
+  if ($entity->bundle() == "gl_step" && $form_id != "node_gl_step_form") {
     // deny access if user is not admin, or if auth_user is not member of group or form id is not "node_gl_step_introduction_form"
     $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
     $relations = GroupContent::loadByEntity($entity);
