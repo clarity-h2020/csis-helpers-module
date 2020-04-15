@@ -173,7 +173,7 @@ var groupContentTemplate = {
 							elementToPrint = elementToPrint.getElementById('dashboard-spacer');
 						} else {
 							//wait for transition
-							sleepTime = 500;
+							sleepTime = 3000;
 							elementToPrint = elementToPrint.getElementById('root');
 						}
 					}
