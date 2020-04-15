@@ -28,6 +28,7 @@ class StudyInfoGenerator {
     $studyPreset = array();
     $studyPresets = array(); // stores ONLY 1 preset, will be replaced by $studyScenarios
     $studyScenarios = array(); // replacing $studyPresets in the future
+    $stepName = null;
 
     // write-permissions inside a Study need to be checked upon a group-member level and not on user level
     $userAccount = \Drupal::currentUser();
@@ -120,6 +121,39 @@ class StudyInfoGenerator {
         $studyPresets['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
       }
 
+      $euTerm = (!$entity->get('field_field_eu_gl_methodology')->isEmpty() ? Term::load($entity->get('field_field_eu_gl_methodology')->target_id) : false);
+      if ($euTerm) {
+        $termID = $euTerm->get('field_eu_gl_taxonomy_id')->value;
+        switch ($termID) {
+          case "eu-gl:hazard-characterization":
+            $stepName = "hazard";
+            break;
+          case "eu-gl:hazard-characterization:local-effects":
+            $stepName = "hazard_local";
+            break;
+          case "eu-gl:exposure-evaluation":
+            $stepName = "exposition";
+            break;
+          case "eu-gl:vulnerability-analysis":
+            $stepName = "vulnerability";
+            break;
+          case "eu-gl:risk-and-impact-assessment":
+            $stepName = "risk";
+            break;
+          case "eu-gl:adaptation-options:identification":
+            $stepName = "adaptation_identification";
+            break;
+          case "eu-gl:adaptation-options:appraisal":
+            $stepName = "adaptation_appraisal";
+            break;
+          case "eu-gl:adaptation-action-plans:implementation":
+            $stepName = "adaptation_implementation";
+            break;
+          default:
+            $stepName = "unknown_EU_GL_ID";
+        }
+      }
+
       if ($groupDatapackageID) {
         $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
         $datapackageUUID = $datapackageNode->uuid();
@@ -135,6 +169,7 @@ class StudyInfoGenerator {
       'name' => $groupName,
       'step' => $entity->id(),
       'step_uuid' => $entity->uuid(),
+      'step_name' => $stepName,
       'study' => (empty($groupid) ? -1 : $groupid[0]), //deprecated -> use  entitiyinfo.study.id
       'study_uuid' => (empty($groupuuid) ? -1 : $groupuuid[0]), //deprecated -> use  entitiyinfo.study.uuid
       'id' => (empty($groupid) ? -1 : $groupid[0]), //overwrites $entityinfo.id from csis_helpers_node_entity_info
@@ -266,6 +301,7 @@ class StudyInfoGenerator {
       //'title' => $entity->get('title')->value, // inconsistency: no title field ins study group!
       'step' => -1,
       'step_uuid' => -1,
+      'step_name' => 'none',
       'id' => $entity->id(),
       'uuid' => $entity->uuid(),
       'study' => $entity->id(), //deprecated -> use  entitiyinfo.study.id
