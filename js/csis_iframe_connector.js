@@ -223,10 +223,10 @@
              * 
              * @type {String}
              */
-                var transportApplicationUrl = 'https://clarity.saver.red/';
+                var transportApplicationUrl = 'https://clarity.saver.red';
                 switch (applicationType) {
                     case "map":
-                        transportApplicationUrl += `/study-${step_name}/reference/${drupalSettings.csisHelpers.studyInfo.study}`;
+                        transportApplicationUrl += `/study-${step_name}/reference/${drupalSettings.csisHelpers.studyInfo.study}/`;
                         break;
                     case "table":
                         transportApplicationUrl += `/study-${step_name}/reference/${drupalSettings.csisHelpers.studyInfo.study}/elements_${step_name}/`;
