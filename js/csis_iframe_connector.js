@@ -92,7 +92,10 @@
      * @param {String} grouping_tag 
      * @param {Object} iFrameMapComponent 
      */
-    drupalSettings.csisHelpers.initMapComponent = function initMapComponent(mapType = 'GenericMap', grouping_tag = 'taxonomy_term--eu_gl', iFrameMapComponent = document.getElementById('map-component')) {
+    drupalSettings.csisHelpers.initMapComponent = function initMapComponent(
+        mapType = 'GenericMap',
+        grouping_tag = 'taxonomy_term--eu_gl',
+        iFrameMapComponent = document.getElementById('map-component')) {
         try {
             if (undefined == iFrameMapComponent || null == iFrameMapComponent) {
                 console.warn('initMapComponent(): no iFrameMapComponent available');
@@ -129,7 +132,9 @@
      * @param {String} tableType 
      * @param {Object} iFrameTableComponent 
      */
-    drupalSettings.csisHelpers.initTableComponent = function initTableComponent(tableType = 'GenericTable', iFrameTableComponent = document.getElementById('table-component')) {
+    drupalSettings.csisHelpers.initTableComponent = function initTableComponent(
+        tableType = 'GenericTable',
+        iFrameTableComponent = document.getElementById('table-component')) {
         try {
 
             if (undefined == iFrameTableComponent || null == iFrameTableComponent) {
@@ -163,7 +168,8 @@
      * 
      * @param {HTMLElement} urbanAdaptationViewer 
      */
-    drupalSettings.csisHelpers.initUrbanAdaptationViewer = function initUrbanAdaptationViewer(urbanAdaptationViewer = document.getElementById('urban-adaptation-viewer')) {
+    drupalSettings.csisHelpers.initUrbanAdaptationViewer = function initUrbanAdaptationViewer(
+        urbanAdaptationViewer = document.getElementById('urban-adaptation-viewer')) {
         try {
             if (undefined == urbanAdaptationViewer || null == urbanAdaptationViewer) {
                 console.warn('initUrbanAdaptationViewer(): no urbanAdaptationViewer HTML Element (urban-adaptation-viewer) available');
@@ -202,8 +208,8 @@
     * @param {HTMLElement} transportApplication 
     */
     drupalSettings.csisHelpers.initTransportApplication = function initTransportApplication(
-        transportApplication = document.getElementById('transport-application'),
-        applicationType = 'study') {
+        applicationType = 'study',
+        transportApplication = document.getElementById('transport-application')) {
         try {
             if (undefined == transportApplication || null == transportApplication) {
                 console.error('initTransportApplication(): no transportApplication HTML Element (transportApplication) available');
