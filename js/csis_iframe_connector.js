@@ -17,7 +17,7 @@
     }
 
     /**
-     * Extract the parameters from CSISHelpers object and append to the iFrame scr URL
+     * Extract the parameters from CSISHelpers object and append to the iFrame scr URL as query params
      * 
      * @param {String} iFrameUrl 
      * @param {String} appType 
@@ -173,7 +173,7 @@
             if (undefined !== drupalSettings && undefined !== drupalSettings.csisHelpers && undefined !== drupalSettings.csisHelpers.studyInfo
                 && undefined !== drupalSettings.csisHelpers.studyInfo.eea_city_name && null !== drupalSettings.csisHelpers.studyInfo.eea_city_name) {
                 /**
-             * Base table component URL
+             * Base EEA component URL
              * 
              * @type {String}
              */
@@ -184,9 +184,60 @@
             } else {
                 console.warn(`no EEA city name available for study, cannot initialise Urban Adaptation Viewer`);
                 if (urbanAdaptationViewer.outerHTML) {
-                    urbanAdaptationViewer.outerHTML = '<h1>Sorry, this study area is not supported by EEA\'s UrbanAdaptationViewer!';
+                    urbanAdaptationViewer.outerHTML = '<h1>Sorry, this study area is not supported by EEA\'s UrbanAdaptationViewer!</h1>';
                 } else {
-                    console.warn('urbanAdaptationViewer.outerHTML() mot available');
+                    console.warn('urbanAdaptationViewer.outerHTML() not available');
+                }
+            }
+        }
+        catch (undefinedError) {
+            console.error('no global drupalSettings object found, probably not connected to Drupal!', undefinedError);
+        }
+    }
+
+    /**
+    * Initialise METEOGRID TransportApplication
+    * 
+    * @see https://github.com/clarity-h2020/csis/issues/134
+    * @param {HTMLElement} transportApplication 
+    */
+    drupalSettings.csisHelpers.initTransportApplication = function initTransportApplication(
+        transportApplication = document.getElementById('transport-application'),
+        applicationType = 'study') {
+        try {
+            if (undefined == transportApplication || null == transportApplication) {
+                console.error('initTransportApplication(): no transportApplication HTML Element (transportApplication) available');
+                return;
+            }
+
+            if (undefined !== drupalSettings && undefined !== drupalSettings.csisHelpers && undefined !== drupalSettings.csisHelpers.studyInfo
+                && undefined !== drupalSettings.csisHelpers.studyInfo.study && null !== drupalSettings.csisHelpers.studyInfo.step_name) {
+                /**
+             * Base transport application component URL
+             * 
+             * @type {String}
+             */
+                var transportApplicationUrl = 'https://clarity.saver.red/';
+                switch (expr) {
+                    case "map":
+                        transportApplicationUrl += `/study-${step_name}/reference/${drupalSettings.csisHelpers.studyInfo.study}`;
+                        break;
+                    case "table":
+                        transportApplicationUrl += `/study-${step_name}/reference/${drupalSettings.csisHelpers.studyInfo.study}/elements_${step_name}/`;
+                        break;
+                    case "study":
+                    default:
+                        transportApplicationUrl += `/studies/reference/${drupalSettings.csisHelpers.studyInfo.study}/`;
+                }
+
+                console.debug(`initilizing iFrame with ${transportApplicationUrl}`);
+                transportApplication.setAttribute('src', transportApplicationUrl);
+            } else {
+                console.warn(`no $study or $step_name property available, cannot initialise Transport Application`);
+                if (transportApplication.outerHTML) {
+                    transportApplication.outerHTML = '<h1>no $study or $step_name property available, cannot initialise Transport Application</h1>';
+                } else {
+                    console.warn('transportApplication.outerHTML() not available');
                 }
             }
         }
