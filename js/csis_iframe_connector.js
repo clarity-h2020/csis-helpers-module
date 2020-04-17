@@ -223,17 +223,19 @@
              * 
              * @type {String}
              */
+                const study = drupalSettings.csisHelpers.studyInfo.study;
+                const step = drupalSettings.csisHelpers.studyInfo.step_name;
                 var transportApplicationUrl = 'https://clarity.saver.red';
                 switch (applicationType) {
                     case "map":
-                        transportApplicationUrl += `/study-${step_name}/reference/${drupalSettings.csisHelpers.studyInfo.study}/`;
+                        transportApplicationUrl += `/study-${step}/reference/${study}/`;
                         break;
                     case "table":
-                        transportApplicationUrl += `/study-${step_name}/reference/${drupalSettings.csisHelpers.studyInfo.study}/elements_${step_name}/`;
+                        transportApplicationUrl += `/study-${step}/reference/${study}/elements_${step}/`;
                         break;
                     case "study":
                     default:
-                        transportApplicationUrl += `/studies/reference/${drupalSettings.csisHelpers.studyInfo.study}/`;
+                        transportApplicationUrl += `/studies/reference/${study}/`;
                 }
 
                 console.debug(`initilizing iFrame with ${transportApplicationUrl}`);
