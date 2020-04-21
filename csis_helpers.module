@@ -410,34 +410,49 @@ function csis_helpers_group_entity_info(\Drupal\Core\Entity\EntityInterface $ent
  */
 function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity)
 {
-  // trigger external apps (Emikat, TM) only based on fitting Study type and on live website
-  if ($entity->bundle() == "study" && \Drupal::request()->getSchemeAndHttpHost() == "https://csis.myclimateservice.eu") {
-
+  if ($entity->bundle() == "study") {
+    // load term with Study type to get the calculation methods
     $studyType = Term::load($entity->get('field_study_type')->target_id);
     $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
 
-    foreach ($calcMethods as $calcMethod) {
-      $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
-
-      if (stripos($calcMethodID, "meteogrid") !== false) {
-        //TM is used for calculation, so it is relevant
-        /** @var \Drupal\csis_helpers\Utils\TMHelperFunctions $tmService */
-        $tmService = \Drupal::service('csis_helpers.tm_helper_functions');
-        $result = $tmService->triggerTM($entity);
-
-        //print result message to admins and developers directly to FE
-        $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
-        if ($user->hasRole('administrator') || $user->hasRole('developer')) {
-          \Drupal::messenger()->addMessage($result['message'], $result['type']);
+    // check if study is saved for the first time
+    if ($entity->isNew()) {
+      // if Studytype IDs match, it's a TM Study and we need to change the default Study area map
+      if ($studyType->get('field_study_type_id')->value == "study-type:screening-transport") {
+        $studyAreaTMmap = \Drupal::service('entity.repository')->loadEntityByUuid('node', 'eb6c7a73-de1a-43b9-9de3-cab5b9cdb55d');
+        if ($studyAreaTMmap) {
+          $entity->set('field_study_area_map', $studyAreaTMmap->id());
         }
-        break;
+        else {
+          \Drupal::logger('csis helpers')->error("Couldn't set default Studyarea Map for new TM Study. UUID not found");
+        }
       }
+    }
 
-      else if (stripos($calcMethodID, "emikat") !== false) {
-        /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
-        $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
-        $statusCode = $emikatService->checkStudyChanges($entity);
-        break;
+    // trigger external apps (Emikat, TM) only based on fitting Study type and on live website
+    if (\Drupal::request()->getSchemeAndHttpHost() == "https://csis.myclimateservice.eu") {
+      foreach ($calcMethods as $calcMethod) {
+        $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
+
+        if (stripos($calcMethodID, "meteogrid") !== false) {
+          //TM is used for calculation, so it is relevant
+          /** @var \Drupal\csis_helpers\Utils\TMHelperFunctions $tmService */
+          $tmService = \Drupal::service('csis_helpers.tm_helper_functions');
+          $result = $tmService->triggerTM($entity);
+
+          //print result message to admins and developers directly to FE
+          $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+          if ($user->hasRole('administrator') || $user->hasRole('developer')) {
+            \Drupal::messenger()->addMessage($result['message'], $result['type']);
+          }
+          break;
+        }
+        else if (stripos($calcMethodID, "emikat") !== false) {
+          /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
+          $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
+          $statusCode = $emikatService->checkStudyChanges($entity);
+          break;
+        }
       }
     }
   }
