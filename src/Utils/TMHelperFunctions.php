@@ -40,7 +40,7 @@ class TMHelperFunctions
 
     // if Study was just created, TM needs to be triggered. Since both title and goal are required fields,
     // all relevant information is available right away
-    if ($entity->isNew()) {
+    if ($entity->isNew() || !isset($entity->original)) {
       $status = 1;
       return $status;
     }
@@ -101,7 +101,7 @@ class TMHelperFunctions
   }
 
   /**
-   * Notifies the TM via PUT or POST request about new or updated Study if necessary
+   * Notifies the TM via PATCH or POST request about new or updated Study if necessary
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    * @return array with message and status type
@@ -143,9 +143,9 @@ class TMHelperFunctions
         )
       );
 
-      // ---------- PUT request with updated Study ----------
+      // ---------- PATCH request with updated Study ----------
       if ($externalID) {
-        $this->sendPutRequest($authToken, $payload, $externalID, $studyID);
+        $this->sendPatchRequest($authToken, $payload, $externalID, $studyID);
         // store the given ID from the TM and set calculation status to 1 (= active/ongoing)
       }
       // -----------------------------------------------------
@@ -155,6 +155,7 @@ class TMHelperFunctions
 
         if ($externalID >= 0) {
           $entity->set("field_emikat_id", $externalID);
+          $entity->save();
           // generate status messages for FE and BE
           \Drupal::logger('TMHelperFunctions')->notice(
             "TM was notified via POST of new Study " . $studyID
@@ -170,17 +171,17 @@ class TMHelperFunctions
 
 
   /**
-   * Sends a PUT request to TM with updates of a Study
+   * Sends a PATCH request to TM with updates of a Study
    *
    * @param [JSON] $payload
    * @return String externalID of study stored in the TM
    */
-  private function sendPutRequest($authToken, $payload, $externalID, $studyID)
+  private function sendPatchRequest($authToken, $payload, $externalID, $studyID)
   {
     $client = \Drupal::httpClient();
 
     try {
-      $request = $client->put(
+      $request = $client->patch(
         "https://clarity.saver.red/es/simmer/api/study/" . $externalID . "/",
         array(
           'headers' => array(
@@ -192,17 +193,17 @@ class TMHelperFunctions
       );
 
       $response = json_decode($request->getBody()->getContents(), true);
-      \Drupal::logger('TMHelperFunctions')->notice("TM was notified via PUT of updates in Study " . $studyID);
+      \Drupal::logger('TMHelperFunctions')->notice("TM was notified via PATCH of updates in Study " . $studyID);
       $this->result['message'] = "Notification of an update in a Study was sent to the TM.";
     } catch (RequestException $e) {
       // generate error messages for BE and FE
       \Drupal::logger('TMHelperFunctions')->error(
-        "PUT Request to the TM returned an error: %error",
+        "PATCH Request to the TM returned an error: %error",
         array(
           '%error' => $e->getMessage(),
         )
       );
-      $this->result['message'] = "PUT request to TM failed. For more details check recent log messages.";
+      $this->result['message'] = "PATCH request to TM failed. For more details check recent log messages.";
       $this->result['type'] = "error";
     }
   }
