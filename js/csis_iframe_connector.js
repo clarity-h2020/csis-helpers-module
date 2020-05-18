@@ -87,7 +87,7 @@
             }
 
             if (additionalQueryParameters && additionalQueryParameters != null) {
-                iFrameUrl += serializeQueryParametersObject(additionalQueryParameters);
+                iFrameUrl += ('&' + serializeQueryParametersObject(additionalQueryParameters));
             }
 
             iFrameUrl += study_uuid ? `&study_uuid=${study_uuid}` : '';
