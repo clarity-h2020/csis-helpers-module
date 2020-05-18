@@ -1,6 +1,6 @@
 /**
- * Exposes a initMapComponent() function that can be used in "ExtendedIframe" Entities to
- * initialise the map component iframe. 
+ * Exposes several init$Component() functions that can be used in "ExtendedIframe" Entities to
+ * initialise the respective component iframe. 
  * 
  * Examples: https://github.com/clarity-h2020/map-component/tree/dev/examples
  * 
@@ -21,8 +21,26 @@
      * 
      * @param {String} iFrameUrl 
      * @param {String} appType 
+     * @param {Object} additionalQueryParameters extended query parameters as JS Object
      */
-    const addQueryParameters = function (iFrameUrl, appType) {
+    const addQueryParameters = function (iFrameUrl, appType, additionalQueryParameters) {
+
+        /**
+         * Quick & Dirty JS Object -> query String
+         * Credits: https://stackoverflow.com/a/1714899
+         * 
+         * @param {Object} obj JS object to serialize
+         * @return {String} query string
+         */
+        const serializeQueryParametersObject = function (obj) {
+            var str = [];
+            for (var p in obj)
+                if (obj.hasOwnProperty(p)) {
+                    str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+                }
+            return str.join("&");
+        };
+
         if (undefined !== drupalSettings && undefined !== drupalSettings.csisHelpers) {
             var csisHelpers = drupalSettings.csisHelpers;
             var study_uuid, study_area, emikat_id, datapackage_uuid,
@@ -68,6 +86,10 @@
                 console.error(`no entityinfo objects found iFrame ${appType} embedded for unsupported entity type!`);
             }
 
+            if (additionalQueryParameters && additionalQueryParameters != null) {
+                iFrameUrl += serializeQueryParametersObject(additionalQueryParameters);
+            }
+
             iFrameUrl += study_uuid ? `&study_uuid=${study_uuid}` : '';
             iFrameUrl += study_area ? `&study_area=${study_area}` : '';
             iFrameUrl += emikat_id ? `&emikat_id=${emikat_id}` : '';
@@ -88,14 +110,17 @@
     /**
      * Update iFrame src attribute for Map Component Apps.
      * 
-     * @param {String} mapType 
-     * @param {String} grouping_tag 
-     * @param {Object} iFrameMapComponent 
+     * @param {String} mapType deprecated
+     * @param {String} grouping_tag deprecated
+     * @param {Object} iFrameMapComponent element name, default 'map-component'
+     * @param {Object} additionalQueryParameters extended query parameters as JS Object
+     * 
      */
     drupalSettings.csisHelpers.initMapComponent = function initMapComponent(
         mapType = 'GenericMap',
         grouping_tag = 'taxonomy_term--eu_gl',
-        iFrameMapComponent = document.getElementById('map-component')) {
+        iFrameMapComponent = document.getElementById('map-component'),
+        additionalQueryParameters = undefined) {
         try {
             if (undefined == iFrameMapComponent || null == iFrameMapComponent) {
                 console.warn('initMapComponent(): no iFrameMapComponent available');
@@ -111,7 +136,7 @@
              * @type {String}
              */
             var mapComponentUrl = `${host}/apps/map-component/build/${mapType}/?host=${host}`;
-            mapComponentUrl = addQueryParameters(mapComponentUrl, mapType);
+            mapComponentUrl = addQueryParameters(mapComponentUrl, mapType, additionalQueryParameters);
 
             // grouping tag/criteria is defined in custom map components so in principle this renders
             // those custom map components useless ...
@@ -131,10 +156,12 @@
      * 
      * @param {String} tableType 
      * @param {Object} iFrameTableComponent 
+     * @param {Object} additionalQueryParameters extended query parameters as JS Object
      */
     drupalSettings.csisHelpers.initTableComponent = function initTableComponent(
         tableType = 'GenericTable',
-        iFrameTableComponent = document.getElementById('table-component')) {
+        iFrameTableComponent = document.getElementById('table-component'),
+        additionalQueryParameters = undefined) {
         try {
 
             if (undefined == iFrameTableComponent || null == iFrameTableComponent) {
@@ -152,7 +179,7 @@
              */
             var tableComponentUrl = `${host}/apps/simple-table-component/build/${tableType}/?host=${host}`;
 
-            tableComponentUrl = addQueryParameters(tableComponentUrl, tableType);
+            tableComponentUrl = addQueryParameters(tableComponentUrl, tableType, additionalQueryParameters);
 
             console.debug(`initilizing iFrame with ${tableComponentUrl}`);
             iFrameTableComponent.setAttribute('src', tableComponentUrl);
