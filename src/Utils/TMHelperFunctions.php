@@ -23,6 +23,7 @@ class TMHelperFunctions
    * considered "relevant" are for now the following fields:
    * - Study title
    * - Study goal
+   * - Country (needed to define the Simulation type)
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    * @return integer status code
@@ -38,17 +39,25 @@ class TMHelperFunctions
 
     $status = 0;
 
-    // if Study was just created, TM needs to be triggered. Since both title and goal are required fields,
-    // all relevant information is available right away
-    if ($entity->isNew() || !isset($entity->original)) {
-      $status = 1;
+    // if Study was just created, don't trigger TM because not all necessary fields can be set yet
+    if ($entity->isNew() || !isset($entity->original) || $entity->get("field_study_goa")->isEmpty() || $entity->field_country->isEmpty()) {
+      $status = 0;
       return $status;
     }
 
     // check relevant fields and set status
     if ($entity->label() != $entity->original->label()) {
       $status = 1;
-    } else if ($entity->get("field_study_goa")->getString() != $entity->original->get("field_study_goa")->getString()) {
+    }
+    else if ($entity->get("field_study_goa")->getString() != $entity->original->get("field_study_goa")->getString()) {
+      $status = 1;
+    }
+
+    // since it's a Reference field, check data package field contents before trying to access them
+    // (needs to be done everytime since user could potentially remove data package from Study and leave it empty)
+    $country = ($entity->field_country->isEmpty() ? "empty" : $entity->field_country->entity->label());
+    $countryOrig = ($entity->original->field_country->isEmpty() ? "empty" : $entity->original->field_country->entity->label());
+    if ($country != $countryOrig) {
       $status = 1;
     }
 
@@ -84,7 +93,6 @@ class TMHelperFunctions
       );
 
       $response = json_decode($request->getBody()->getContents(), true);
-      //dump($response);
       $authToken = $response["token"];
     } catch (RequestException $e) {
       // generate error messages for BE and FE
@@ -131,6 +139,28 @@ class TMHelperFunctions
       $studyGoal = substr($entity->get("field_study_goa")->getString(), 0, 2000);
       $studyID = $entity->id();
       $externalID = $entity->get("field_emikat_id")->getString();
+      $users = array();
+      $country = $entity->get("field_country")->entity->get("name")->value;
+      $simulationType = 118;
+
+      if ($country != "Spain") {
+        $simulationType = 158;
+      }
+
+      // get usernames from the Groupmembers, so that they will be granted access inside the TM
+      $members = $entity->getMembers();
+
+      foreach ($members as $member) {
+        $account = $member->getUser(); // get userAccount
+        $user = \Drupal\user\Entity\User::load($account->id());
+        if ($user->hasRole("administrator")) {
+          // ATM admins are not part of the SSO, so the TM doesn't recognize these users and gives an error when trying
+          // to create a simulation with these users included
+          continue;
+        }
+        $name = $account->getUsername();
+        array_push($users, $name);
+      }
 
       // simulation type has to be set according to the specifications of the TM API
       // and will be for Clarity 118, as long as there is just one TM relevant Study type
@@ -138,15 +168,15 @@ class TMHelperFunctions
         array(
           "name" => $entity->label(),
           "description" => $studyGoal,
-          "simulationtype" => 118,
-          "reference" => $studyID
+          "simulationtype" => $simulationType,
+          "reference" => $studyID,
+          "users" => $users
         )
       );
 
       // ---------- PATCH request with updated Study ----------
       if ($externalID) {
         $this->sendPatchRequest($authToken, $payload, $externalID, $studyID);
-        // store the given ID from the TM and set calculation status to 1 (= active/ongoing)
       }
       // -----------------------------------------------------
       // ---------- POST request with new Study ----------
@@ -233,7 +263,6 @@ class TMHelperFunctions
       );
 
       $response = json_decode($request->getBody()->getContents(), true);
-      //dump($response);
       $externalID = $response["id"];
     } catch (RequestException $e) {
       // generate error messages for BE and FE and set $success to false

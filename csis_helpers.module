@@ -96,19 +96,19 @@ function csis_helpers_group_view(array &$build, EntityInterface $entity, EntityV
 
   $build['#attached']['drupalSettings']['csisHelpers']['studyInfo'] = csis_helpers_group_entity_info($entity);
 
-  if ($view_mode == "full" || $view_mode == "introduction") {
-    // when group is called in 'full' or 'introduction' view (= default forwarding after Study is create)
-    // check the TM trigger queue for possible new TM Studies which need to be sent over to the TM
-    $queue = \Drupal::service('queue')->get('tm_trigger_queue');
-    while ($item = $queue->claimItem()) {
-      $studyID = $item->data->gid;
-      $study = Group::load($studyID);
-      /** @var \Drupal\csis_helpers\Utils\TMHelperFunctions $tmService */
-      $tmService = \Drupal::service('csis_helpers.tm_helper_functions');
-      $result = $tmService->triggerTM($study);
-      $queue->deleteItem($item);
-    }
-  }
+  // if ($view_mode == "full" || $view_mode == "introduction") {
+  //   // when group is called in 'full' or 'introduction' view (= default forwarding after Study is created)
+  //   // check the TM trigger queue for possible new TM Studies which need to be sent over to the TM
+  //   $queue = \Drupal::service('queue')->get('tm_trigger_queue');
+  //   while ($item = $queue->claimItem()) {
+  //     $studyID = $item->data->gid;
+  //     $study = Group::load($studyID);
+  //     /** @var \Drupal\csis_helpers\Utils\TMHelperFunctions $tmService */
+  //     $tmService = \Drupal::service('csis_helpers.tm_helper_functions');
+  //     $result = $tmService->triggerTM($study);
+  //     $queue->deleteItem($item);
+  //   }
+  // }
 }
 
 function csis_helpers_form_node_form_alter(&$form, $form_state, $form_id)
@@ -452,17 +452,14 @@ function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity
           //TM is used for calculation, so it is relevant
           /** @var \Drupal\csis_helpers\Utils\TMHelperFunctions $tmService */
           $tmService = \Drupal::service('csis_helpers.tm_helper_functions');
-          if (!$entity->isNew()) {
-            // only call TM trigger if Study is not new, since otherwise there is no GroupID available yet
-            // in the hook_presave()
-            $result = $tmService->triggerTM($entity);
+          $result = $tmService->triggerTM($entity);
 
-            //print result message to admins and developers directly to FE
-            $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
-            if ($user->hasRole('administrator') || $user->hasRole('developer')) {
-              \Drupal::messenger()->addMessage($result['message'], $result['type']);
-            }
+          //print result message to admins and developers directly to FE
+          $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+          if ($user->hasRole('administrator') || $user->hasRole('developer')) {
+            \Drupal::messenger()->addMessage($result['message'], $result['type']);
           }
+
           break;
         }
         else if (stripos($calcMethodID, "emikat") !== false) {
@@ -476,43 +473,43 @@ function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity
   }
 }
 
-/**
- * Implements hook_ENTITY_TYPE_insert() for Group type. Currently needed to add
- * new TM relevant Studies to the TM_trigger_queue, which is processed after the
- * Study ID is available (which is needed in the TM as a reference to the Study
- * in the CSIS).
- *
- * @param \Drupal\Core\Entity\EntityInterface $entity
- *
- */
-function csis_helpers_group_insert(\Drupal\Core\Entity\EntityInterface $entity)
-{
-  if ($entity->bundle() == "study") {
-    // load term with Study type to get the calculation methods
-    $studyType = Term::load($entity->get('field_study_type')->target_id);
-    $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
+// /**
+//  * Implements hook_ENTITY_TYPE_insert() for Group type. Currently needed to add
+//  * new TM relevant Studies to the TM_trigger_queue, which is processed after the
+//  * Study ID is available (which is needed in the TM as a reference to the Study
+//  * in the CSIS).
+//  *
+//  * @param \Drupal\Core\Entity\EntityInterface $entity
+//  *
+//  */
+// function csis_helpers_group_insert(\Drupal\Core\Entity\EntityInterface $entity)
+// {
+//   if ($entity->bundle() == "study") {
+//     // load term with Study type to get the calculation methods
+//     $studyType = Term::load($entity->get('field_study_type')->target_id);
+//     $calcMethods = $studyType->get('field_study_calculation')->referencedEntities();
 
-    // process Studies only based on fitting Study type and on live website
-    if (\Drupal::request()->getSchemeAndHttpHost() == "https://csis.myclimateservice.eu") {
-      foreach ($calcMethods as $calcMethod) {
-        $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
+//     // process Studies only based on fitting Study type and on live website
+//     if (\Drupal::request()->getSchemeAndHttpHost() == "https://csis.myclimateservice.eu") {
+//       foreach ($calcMethods as $calcMethod) {
+//         $calcMethodID = $calcMethod->get("field_calculation_method_id")->value;
 
-        if (stripos($calcMethodID, "meteogrid") !== false) {
-          // TM is used for calculation, so it is relevant
-          // instead of triggering directly, add study to the TM trigger queue
-          /** @var QueueFactory $queue_factory */
-          $queue_factory = \Drupal::service('queue');
-          /** @var QueueInterface $queue */
-          $queue = $queue_factory->get('tm_trigger_queue');
-          $item = new \stdClass();
-          $item->gid = $entity->id();
-          $queue->createItem($item);
-          break;
-        }
-      }
-    }
-  }
-}
+//         if (stripos($calcMethodID, "meteogrid") !== false) {
+//           // TM is used for calculation, so it is relevant
+//           // instead of triggering directly, add study to the TM trigger queue
+//           /** @var QueueFactory $queue_factory */
+//           $queue_factory = \Drupal::service('queue');
+//           /** @var QueueInterface $queue */
+//           $queue = $queue_factory->get('tm_trigger_queue');
+//           $item = new \stdClass();
+//           $item->gid = $entity->id();
+//           $queue->createItem($item);
+//           break;
+//         }
+//       }
+//     }
+//   }
+// }
 
 /**
  * @param $node \Drupal\node\Entity\Node
