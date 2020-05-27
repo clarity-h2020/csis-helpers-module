@@ -185,7 +185,6 @@ class TMHelperFunctions
 
         if ($externalID >= 0) {
           $entity->set("field_emikat_id", $externalID);
-          $entity->save();
           // generate status messages for FE and BE
           \Drupal::logger('TMHelperFunctions')->notice(
             "TM was notified via POST of new Study " . $studyID
