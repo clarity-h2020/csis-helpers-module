@@ -21,64 +21,66 @@ class TestingService {
    */
   public function sendTestStudy($data) {
 
-    if (\Drupal::request()->getSchemeAndHttpHost() != "https://csis.myclimateservice.eu") {
+    if (\Drupal::request()->getSchemeAndHttpHost() == "https://csis.myclimateservice.eu") {
+      $entity = Group::load($data->gid); // our test study
+
+      // extract all necessary field information for Request body
+      $rawArea = $entity->get("field_area")->get(0)->getValue();
+      $studyGoal = substr($entity->get("field_study_goa")->getString(), 0, 500);
+      $studyID = $entity->id();
+      $emikatID = $entity->get("field_emikat_id")->getString();
+      $countryCode = $entity->get("field_country")->entity->get("field_country_code")->value;
+      $city = null;
+      $cityCode = null;
+      $cityTerm = (!$entity->get('field_city_region')->isEmpty() ? Term::load($entity->get('field_city_region')->target_id) : false);
+      if ($cityTerm) {
+        $city = $entity->get("field_city_region")->entity->label();
+        $cityCode = $cityTerm->get('field_city_code')->value;
+      }
+
+      // get credentials for Emikat server
+      $config = \Drupal::config('csis_helpers.default');
+      $auth = array($config->get('emikat_username'), $config->get('emikat_password'));
+
+      $baseURL = \Drupal::request()->getSchemeAndHttpHost();
+      $studyRestURL = $baseURL . "/rest/emikat/study/" . $studyID;
+      $description = $studyGoal .
+        " \nCSIS_STUDY_AREA: " . $rawArea['left'] . ", " . $rawArea['bottom'] . ", " . $rawArea['right'] . ", " . $rawArea['top'] .
+        " \nCSIS_URL: " . $studyRestURL .
+        " \nCSIS_COUNTRY_CODE: " . $countryCode .
+        " \nCSIS_CITY: " . $city .
+        " \nCSIS_CITY_CODE: " . $cityCode;
+
+
+      // emikatID already exists -> current Study needs to be updated via POST
+      $payload = json_encode(
+        array(
+          "name" => $entity->label() . " | " . $studyID,
+          "description" => $description,
+          "status" => "AKT",
+          "forceRecalculate" => true
+        )
+      );
+      $success = $this->sendPostRequest($payload, $auth, $emikatID);
+
+      if ($success) {
+        $entity->set("field_calculation_status", 1);
+        // generate status messages for FE and BE
+        \Drupal::logger('csis_helpers_testing')->notice(
+          "Automated testing: test Study sent to Emikat for calculations."
+        );
+        $entity->save();
+      }
+
+      return $success;
+    }
+    else {
       \Drupal::logger('csis_helpers_testing')->notice(
         "Automated testing not active on local or development instances of CSIS."
       );
       return false;
     }
 
-    $entity = Group::load($data->gid); // our test study
-
-    // extract all necessary field information for Request body
-    $rawArea = $entity->get("field_area")->get(0)->getValue();
-    $studyGoal = substr($entity->get("field_study_goa")->getString(), 0, 500);
-    $studyID = $entity->id();
-    $emikatID = $entity->get("field_emikat_id")->getString();
-    $countryCode = $entity->get("field_country")->entity->get("field_country_code")->value;
-    $city = null;
-    $cityCode = null;
-    $cityTerm = (!$entity->get('field_city_region')->isEmpty() ? Term::load($entity->get('field_city_region')->target_id) : false);
-    if ($cityTerm) {
-      $city = $entity->get("field_city_region")->entity->label();
-      $cityCode = $cityTerm->get('field_city_code')->value;
-    }
-
-    // get credentials for Emikat server
-    $config = \Drupal::config('csis_helpers.default');
-    $auth = array($config->get('emikat_username'), $config->get('emikat_password'));
-
-    $baseURL = \Drupal::request()->getSchemeAndHttpHost();
-    $studyRestURL = $baseURL . "/rest/emikat/study/" . $studyID;
-    $description = $studyGoal .
-      " \nCSIS_STUDY_AREA: " . $rawArea['left'] . ", " . $rawArea['bottom'] . ", " . $rawArea['right'] . ", " . $rawArea['top'] .
-      " \nCSIS_URL: " . $studyRestURL .
-      " \nCSIS_COUNTRY_CODE: " . $countryCode .
-      " \nCSIS_CITY: " . $city .
-      " \nCSIS_CITY_CODE: " . $cityCode;
-
-
-    // emikatID already exists -> current Study needs to be updated via POST
-    $payload = json_encode(
-      array(
-        "name" => $entity->label() . " | " . $studyID,
-        "description" => $description,
-        "status" => "AKT",
-        "forceRecalculate" => true
-      )
-    );
-    $success = $this->sendPostRequest($payload, $auth, $emikatID);
-
-    if ($success) {
-      $entity->set("field_calculation_status", 1);
-      // generate status messages for FE and BE
-      \Drupal::logger('csis_helpers_testing')->notice(
-        "Automated testing: test Study sent to Emikat for calculations."
-      );
-      $entity->save();
-    }
-
-    return $success;
   }
 
 
