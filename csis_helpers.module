@@ -206,15 +206,23 @@ function csis_helpers_form_group_form_alter(&$form, $form_state, $form_id)
  */
 function csis_helpers_emikat_trigger_form_submit($form, FormStateInterface $form_state)
 {
-  $entity = $form_state->GetFormObject()->getEntity();
-  /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
-  $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
-  $result = $emikatService->triggerEmikat($entity);
+  // trigger external apps (Emikat, TM) only based on fitting Study type and on live website
+  if (\Drupal::request()->getSchemeAndHttpHost() == "https://csis.myclimateservice.eu") {
+    $entity = $form_state->GetFormObject()->getEntity();
+    /** @var \Drupal\csis_helpers\Utils\EmikatHelperFunctions $emikatService */
+    $emikatService = \Drupal::service('csis_helpers.emikat_helper_functions');
+    $result = $emikatService->triggerEmikat($entity);
 
-  //print result message to admins and developers directly to FE
-  $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
-  if ($user->hasRole('administrator') || $user->hasRole('developer')) {
-    \Drupal::messenger()->addMessage($result['message'], $result['type']);
+    //print result message to admins and developers directly to FE
+    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    if ($user->hasRole('administrator') || $user->hasRole('developer')) {
+      \Drupal::messenger()->addMessage($result['message'], $result['type']);
+    }
+  } else {
+    \Drupal::logger('csis_helpers')->notice(
+      "Emikat Study calculations cannot be triggered on local or development instances of CSIS."
+    );
+    return false;
   }
 }
 
@@ -469,6 +477,11 @@ function csis_helpers_entity_presave(\Drupal\Core\Entity\EntityInterface $entity
           break;
         }
       }
+    } else {
+      \Drupal::logger('csis_helpers')->notice(
+        "External (Study) calculations cannot be triggered on local or development instances of CSIS."
+      );
+      return false;
     }
   }
 }
