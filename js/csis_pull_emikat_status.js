@@ -118,7 +118,6 @@ function processCalculationStatus(batchJobs, authInfo, emikatID, studyUUID) {
     "Rebuild Table CLY_GRID_ETRS89_1K#1757",
     "Rebuild Table CLY_PARAMETER#1976"
   ];
-  var cars = ["Saab", "Volvo", "BMW"];
 
   for (let i = 0; i < batchJobs.length; i++) {
     job = batchJobs[i];
