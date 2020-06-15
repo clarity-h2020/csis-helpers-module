@@ -72,7 +72,7 @@ function getUserCredentials(userEndpoint, emikatID, studyUUID) {
 // AJAX call to Emikat requesting the status of the current study calculations
 function pullEmikatStatusReal(authInfo, emikatID, studyUUID) {
   jQuery.ajax({
-    url: "https://service.emikat.at/EmiKatTst/api/scenarios/" + emikatID + "/feature/tab.AD_V_BATCH_IN_QUEUE.1710/table/data?rownum=20&filter=SZM_SZENARIO_REF=" + emikatID +"&sortby=Oid%20DESC",
+    url: "https://service.emikat.at/EmiKatTst/api/scenarios/" + emikatID + "/feature/tab.AD_V_BATCH_IN_QUEUE.1710/table/data?rownum=30&filter=SZM_SZENARIO_REF=" + emikatID +"&sortby=Oid%20DESC",
     method: "GET",
     headers: {
       'Accept': 'application/json, text/plain, */*',
@@ -99,9 +99,38 @@ function processCalculationStatus(batchJobs, authInfo, emikatID, studyUUID) {
   var relevantJobs = 0;
   var finishedJobs = 0;
   var errors = 0;
+  var relevantJobNames = [
+    "Rebuild all views...",
+    "Rebuild Table CLY_IMPACT_RESULT_HW#1838",
+    "Rebuild Table CLY_HW_T_MRT#1856",
+    "Rebuild Table CLY_HW_FLUXES#1856",
+    "Rebuild Table CLY_HW_GRID_DETAILS_PROJ#1856",
+    "Rebuild Table CLY_HW_GRID_DETAILS#1856",
+    "Rebuild Table CLY_URBAN_ATLAS#1776",
+    "Rebuild Table CLY_AO_LAYER_PARAMS#1796",
+    "Rebuild Table CLY_EUROSTAT_CITIES_MORTALITY#2056",
+    "Rebuild Table CLY_EL_POPULATION_INTERPOLATED#2016",
+    "Rebuild Table CLY_UA_FRACTION#2016",
+    "Rebuild Table CLY_ADAPTATION_OPT_ITEM#1837",
+    "Rebuild Table CLY_ADAPTATION_OPTION#1837",
+    "Rebuild Table CLY_PROJECT#1837",
+    "Rebuild Table CLY_HAZARD_EVENTS_STUDY#2036",
+    "Rebuild Table CLY_GRID_ETRS89_1K#1757",
+    "Rebuild Table CLY_PARAMETER#1976"
+  ];
+  var cars = ["Saab", "Volvo", "BMW"];
 
   for (let i = 0; i < batchJobs.length; i++) {
     job = batchJobs[i];
+
+    jobName = job['values'][1];
+    isRelevant = relevantJobNames.includes(jobName);
+    if (!isRelevant) {
+      // don't use this batch job for calculation status, since it's not relevant
+      // this batch jobs might for example only be used temporarilly during development
+      continue;
+    }
+
     console.log("JobID: " + job['values'][0] + " with status: " + job['values'][4]);
 
     relevantJobs++;
@@ -114,7 +143,7 @@ function processCalculationStatus(batchJobs, authInfo, emikatID, studyUUID) {
     }
 
     // stop loop here, because all jobs after that one belong to an old calculation
-    if (job['values'][1] == "Rebuild Table CLY_PARAMETER#1976") {
+    if (jobName == "Rebuild Table CLY_PARAMETER#1976") {
       break;
     }
   }

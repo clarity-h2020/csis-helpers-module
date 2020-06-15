@@ -200,6 +200,11 @@ class TestingService {
   /**
    * Checks current batchjobs for the study and their status and number of results
    *
+   * UPDATE: Only consider a number of predefined Batchjobs for the analysis, since
+   * additional batchjobs might be added temporarilly just for development purposes
+   * for a new feature. These might fail, however have no impact on the current
+   * calculation and should therefore be ignored.
+   *
    * @param string $emikatID
    * @param array $auth
    * @return array batchjob details, the number of warnings found and time when calculation started
@@ -208,6 +213,25 @@ class TestingService {
     $client = \Drupal::httpClient();
     $warningsCount = 0;
     $calcStarted = 0;
+    $relevantJobNames = array(
+      "Rebuild all views...",
+      "Rebuild Table CLY_IMPACT_RESULT_HW#1838",
+      "Rebuild Table CLY_HW_T_MRT#1856",
+      "Rebuild Table CLY_HW_FLUXES#1856",
+      "Rebuild Table CLY_HW_GRID_DETAILS_PROJ#1856",
+      "Rebuild Table CLY_HW_GRID_DETAILS#1856",
+      "Rebuild Table CLY_URBAN_ATLAS#1776",
+      "Rebuild Table CLY_AO_LAYER_PARAMS#1796",
+      "Rebuild Table CLY_EUROSTAT_CITIES_MORTALITY#2056",
+      "Rebuild Table CLY_EL_POPULATION_INTERPOLATED#2016",
+      "Rebuild Table CLY_UA_FRACTION#2016",
+      "Rebuild Table CLY_ADAPTATION_OPT_ITEM#1837",
+      "Rebuild Table CLY_ADAPTATION_OPTION#1837",
+      "Rebuild Table CLY_PROJECT#1837",
+      "Rebuild Table CLY_HAZARD_EVENTS_STUDY#2036",
+      "Rebuild Table CLY_GRID_ETRS89_1K#1757",
+      "Rebuild Table CLY_PARAMETER#1976"
+    );
     $batchjobs = array();
     try {
       $request = $client->get(
@@ -222,6 +246,12 @@ class TestingService {
       $response = json_decode($request->getBody(), true);
 
       foreach ($response["rows"] as $key => $row) {
+
+        if (!in_array($row["values"][1], $relevantJobNames, true)) {
+          //batchjob not in list of relevant jobs, so this one should be skipped
+          continue;
+        }
+
         $batchjobs[$key] = array(
           "id" => $row["values"][0],
           "name" => $row["values"][1],
@@ -263,7 +293,7 @@ class TestingService {
           '%error' => $e->getMessage(),
         )
       );
-      return array ($batchjobs, $warningsCount + 1);
+      return array ($batchjobs, $warningsCount + 1, 0);
     }
   }
 
