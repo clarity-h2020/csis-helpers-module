@@ -236,7 +236,7 @@ function csis_helpers_emikat_trigger_form_submit($form, FormStateInterface $form
 function csis_helpers_block_access(\Drupal\block\Entity\Block $block, $operation, \Drupal\Core\Session\AccountInterface $account)
 {
   // this Checklist block is only for Emikat-relevant Studies, other Studies should not show this block
-  if ($operation == 'view' && $block->getPluginId() == 'views_block:study_group_overview-block_3') {
+  if ($operation == 'view' && $block->getPluginId() == 'views_block:study_group_overview-study_status_block') {
     // load the Study group and check the calculation method based on the Study type
     $group = \Drupal::routeMatch()->getParameter('group');
     if ($group && $group->bundle() == "study") {
