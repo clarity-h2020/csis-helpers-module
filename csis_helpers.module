@@ -139,6 +139,10 @@ function csis_helpers_form_node_form_alter(&$form, $form_state, $form_id)
     }
   }
 
+  if ($entity->bundle() == "gl_step" && $form_id != "node_gl_step_edit_form") {
+    $form['actions']['delete']['#access'] = false;
+  }
+
   // prevent page-reload /redirect for the edit-form of Report images (unless user is on the summary page)
   if ($form_id == "node_report_image_edit_form" && \Drupal::request()->query->has('destination')) {
     $pathComponents = explode("/", \Drupal::request()->query->get('destination'));
