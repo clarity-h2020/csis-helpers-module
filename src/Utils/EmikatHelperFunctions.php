@@ -192,7 +192,7 @@ class EmikatHelperFunctions {
       $response = json_decode($request->getBody()->getContents(), true);
       //dump($response);
       $emikatID = $response["id"];
-      \Drupal::logger('EmikatHelperFunctions')->notice("Emikat was notified via PUT of new Study " . $studyID);
+      \Drupal::logger('EmikatHelperFunctions')->notice("Emikat was notified via PUT of new Study " . $studyID . " with EmikatID = " . $emikatID);
       $this->result['message'] = "Initial notification of a new Study was sent Emikat.";
 
     } catch (RequestException $e) {
