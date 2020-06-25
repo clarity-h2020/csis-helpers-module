@@ -53,16 +53,6 @@
         if (triggerPermissions == 0) {
           $(this).remove();
         }
-        else if (calcStatus == 0 || calcStatus == 2) {
-
-          $(this).find("a").removeAttr("href");
-          $(this).find("a").addClass("disabled");
-
-          // need to overwrite the original element, otherwise Drupal will still be able to open the modal window
-          var clonedEl = $(this).clone();
-          $(this).replaceWith(clonedEl);
-        }
-
       });
     }
   };
