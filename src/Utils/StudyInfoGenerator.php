@@ -28,6 +28,7 @@ class StudyInfoGenerator {
     $studyPreset = array();
     $studyPresets = array(); // stores ONLY 1 preset, will be replaced by $studyScenarios
     $studyScenarios = array(); // replacing $studyPresets in the future
+    $adaptedScenario = False; // declares whether or not an Adaptation Strategy has been defined by the user
     $stepName = null;
 
     // write-permissions inside a Study need to be checked upon a group-member level and not on user level
@@ -80,9 +81,9 @@ class StudyInfoGenerator {
           $termEmScenario = Term::load($paragraph->get('field_emission_scenario')->target_id);
           $termEventFreq = Term::load($paragraph->get('field_event_frequency')->target_id);
           $termTimePeriod = Term::load($paragraph->get('field_time_period')->target_id);
-          $termStudyVariant = Term::load($paragraph->get('field_study_variant')->target_id);
+          //$termStudyVariant = Term::load($paragraph->get('field_study_variant')->target_id);
 
-          if (!$termTimePeriod || !$termEmScenario || !$termEventFreq || !$termStudyVariant) {
+          if (!$termTimePeriod || !$termEmScenario || !$termEventFreq) {
             // although in the Study preset (aka Study scenario) all fields are required
             // and therefore must exist if the paragraph exists, it could happen that
             // the related taxonomy term has been removed from the system
@@ -96,7 +97,7 @@ class StudyInfoGenerator {
           $studyPreset['time_period'] = $termTimePeriod->get('field_var_meaning')->value;
           $studyPreset['emission_scenario'] = $termEmScenario->get('field_var_meaning')->value;
           $studyPreset['event_frequency'] = $termEventFreq->get('field_var_meaning')->value;
-          $studyPreset['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
+          //$studyPreset['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
 
           array_push($studyScenarios, $studyPreset);
 
@@ -104,7 +105,7 @@ class StudyInfoGenerator {
           $studyPresets['time_period'] = $termTimePeriod->get('field_var_meaning')->value;
           $studyPresets['emission_scenario'] = $termEmScenario->get('field_var_meaning')->value;
           $studyPresets['event_frequency'] = $termEventFreq->get('field_var_meaning')->value;
-          $studyPresets['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
+          //$studyPresets['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
         }
       }
 
@@ -114,11 +115,17 @@ class StudyInfoGenerator {
         $termEmScenario = Term::load($paragraph->get('field_emission_scenario')->target_id);
         $termEventFreq = Term::load($paragraph->get('field_event_frequency')->target_id);
         $termTimePeriod = Term::load($paragraph->get('field_time_period')->target_id);
-        $termStudyVariant = Term::load($paragraph->get('field_study_variant')->target_id);
+        //$termStudyVariant = Term::load($paragraph->get('field_study_variant')->target_id);
         $studyPresets['time_period'] = $termTimePeriod->get('field_var_meaning')->value;
         $studyPresets['emission_scenario'] = $termEmScenario->get('field_var_meaning')->value;
         $studyPresets['event_frequency'] = $termEventFreq->get('field_var_meaning')->value;
-        $studyPresets['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
+        //$studyPresets['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
+      }
+
+      // check if Study has an Adaptation Project (ap) set
+      $ap = $relation->getGroup()->getContentEntities("group_node:adaptation_project");
+      if ($ap) {
+        $adaptedScenario = True;
       }
 
       $euTerm = (!$entity->get('field_field_eu_gl_methodology')->isEmpty() ? Term::load($entity->get('field_field_eu_gl_methodology')->target_id) : false);
@@ -182,6 +189,7 @@ class StudyInfoGenerator {
       'city_code' => $groupCityCode,
       'study_presets' => $studyPresets,
       'study_scenarios' => $studyScenarios,
+      'has_adapted_scenario' => $adaptedScenario,
       'is_anonymous' => $isAnonymous,
       'is_member' => $isMember,
       'write_permissions' => ($has_user_special_roles ? 1 : 0),
@@ -203,6 +211,7 @@ class StudyInfoGenerator {
     $studyPreset = array();
     $studyPresets = array(); // stores ONLY 1 preset, will be replaced by $studyScenarios
     $studyScenarios = array(); // replacing $studyPresets in the future
+    $adaptedScenario = False; // declares whether or not an Adaptation Strategy has been defined by the user
 
     // Load the data package
     $groupDatapackageID = $entity->get('field_data_package')->target_id;
@@ -234,9 +243,9 @@ class StudyInfoGenerator {
           $termTimePeriod = Term::load($paragraph->get('field_time_period')->target_id);
           $termEmScenario = Term::load($paragraph->get('field_emission_scenario')->target_id);
           $termEventFreq = Term::load($paragraph->get('field_event_frequency')->target_id);
-          $termStudyVariant = Term::load($paragraph->get('field_study_variant')->target_id);
+          //$termStudyVariant = Term::load($paragraph->get('field_study_variant')->target_id);
 
-          if (!$termTimePeriod || !$termEmScenario || !$termEventFreq || !$termStudyVariant) {
+          if (!$termTimePeriod || !$termEmScenario || !$termEventFreq) {
             // although in the Study preset (aka Study scenario) all fields are required
             // and therefore must exist if the paragraph exists, it could happen that
             // the related taxonomy term has been removed from the system
@@ -250,7 +259,7 @@ class StudyInfoGenerator {
           $studyPreset['time_period'] = $termTimePeriod->get('field_var_meaning')->value;
           $studyPreset['emission_scenario'] = $termEmScenario->get('field_var_meaning')->value;
           $studyPreset['event_frequency'] = $termEventFreq->get('field_var_meaning')->value;
-          $studyPreset['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
+          //$studyPreset['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
 
           array_push($studyScenarios, $studyPreset);
 
@@ -258,9 +267,15 @@ class StudyInfoGenerator {
           $studyPresets['time_period'] = $termTimePeriod->get('field_var_meaning')->value;
           $studyPresets['emission_scenario'] = $termEmScenario->get('field_var_meaning')->value;
           $studyPresets['event_frequency'] = $termEventFreq->get('field_var_meaning')->value;
-          $studyPresets['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
+          //$studyPresets['study_variant'] = $termStudyVariant->get('field_var_meaning')->value;
         }
       }
+    }
+
+    // check if Study has an Adaptation Project (ap) set
+    $ap = $entity->getContentEntities("group_node:adaptation_project");
+    if ($ap) {
+      $adaptedScenario = True;
     }
 
     // write-permissions inside a Study need to be checked upon a group-member level and not a user level
@@ -314,6 +329,7 @@ class StudyInfoGenerator {
       'city_code' => $cityCode,
       'study_presets' => $studyPresets,
       'study_scenarios' => $studyScenarios,
+      'has_adapted_scenario' => $adaptedScenario,
       'is_anonymous' => $isAnonymous,
       'is_member' => $isMember,
       'write_permissions' => ($has_user_special_roles ? 1 : 0),
