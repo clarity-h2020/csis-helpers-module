@@ -150,11 +150,13 @@ var groupContentTemplate = {
 						elementToPrint = elementToPrint.getElementById('indicatorCriteriaTable');
 						isScenarioInChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 						imageScale = 1;
+						imageName = 'table-snapshot.jpg';
 						replaceImgSourceWithBase64Encoding(elementToPrint, imagesToRecover);
 					} else if (event.currentTarget.id == 'includeChartButton') {
 						//print the chart of the scenario analysis tool
 						elementToPrint = elementToPrint.getElementById('indicator-bar-charts').firstChild;
 						isScenarioInChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+						imageName = 'charts-snapshot.jpg';
 						imageScale = 1;
 						replaceImgSourceWithBase64Encoding(elementToPrint, imagesToRecover);
 					} else if (iframeFound && elementToPrint.getElementById('#map') != null) {
@@ -279,11 +281,17 @@ function replaceTranslate3dStyleByElement(element) {
 			}
 
 			if (
+				element.style['bottom'] != null &&
+				element.style['bottom'] != '' &&
+				element.style['bottom'].indexOf('px') != -1
+			) {
+				element.style['bottom'] = parseInt(element.style['bottom'].replace(/px/g, '')) - trans_y + 'px';
+			} else if (
 				element.style['top'] != null &&
 				element.style['top'] != '' &&
 				element.style['top'].indexOf('px') != -1
 			) {
-				element.style['top'] = parseInt(element.style['top'].replace(/px/g, '')) + trans_x + 'px';
+				element.style['top'] = parseInt(element.style['top'].replace(/px/g, '')) + trans_y + 'px';
 			} else {
 				element.style['top'] = trans_y + 'px';
 			}
