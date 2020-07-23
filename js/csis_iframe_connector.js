@@ -44,7 +44,7 @@
         if (undefined !== drupalSettings && undefined !== drupalSettings.csisHelpers) {
             var csisHelpers = drupalSettings.csisHelpers;
             var study_uuid, study_area, emikat_id, datapackage_uuid,
-                write_permissions, resource_uuid, study_variant, time_period, emission_scenario, event_frequency;
+                write_permissions, resource_uuid, time_period, emission_scenario, event_frequency;
 
             if (undefined !== csisHelpers.resourceInfo && appType == 'ResourcePreviewMap') {
                 console.info(`showing ${appType} for resource ${csisHelpers.resourceInfo.name}`);
@@ -71,7 +71,6 @@
                     time_period = csisHelpers.studyInfo.study_presets.time_period;
                     emission_scenario = csisHelpers.studyInfo.study_presets.emission_scenario;
                     event_frequency = csisHelpers.studyInfo.study_presets.event_frequency;
-                    study_variant = csisHelpers.studyInfo.study_presets.study_variant;
                 } else {
                     console.warn(`no study_presets found in study ${csisHelpers.studyInfo.name} (${csisHelpers.studyInfo.uuid})`);
                 }
@@ -96,7 +95,6 @@
             iFrameUrl += datapackage_uuid ? `&datapackage_uuid=${datapackage_uuid}` : '';
             iFrameUrl += write_permissions ? `&write_permissions=${write_permissions}` : '';
             iFrameUrl += resource_uuid ? `&resource_uuid=${resource_uuid}` : '';
-            iFrameUrl += study_variant ? `&study_variant=${study_variant}` : '';
             iFrameUrl += time_period ? `&time_period=${time_period}` : '';
             iFrameUrl += emission_scenario ? `&emissions_scenario=${emission_scenario}` : '';
             iFrameUrl += event_frequency ? `&event_frequency=${event_frequency}` : '';
