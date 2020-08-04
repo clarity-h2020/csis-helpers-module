@@ -766,7 +766,7 @@ function csis_helpers_views_post_execute(\Drupal\views\ViewExecutable $view)
     $result = $view->result;
     $account = $view->getUser();
     $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
-    if ($account->isAnonymous() && $result[0]->nid) {
+    if ($account->isAnonymous() && $result && $result[0]->nid) {
       $glStep = Node::load(intval($result[0]->nid));
       $relations = GroupContent::loadByEntity($glStep);
 

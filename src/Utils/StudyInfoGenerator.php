@@ -22,8 +22,10 @@ class StudyInfoGenerator {
     $groupEmikatID = null;
     $datapackageUUID = null;
     $groupArea = null;
+    $groupName = null;
     $groupEeaName = null;
     $groupCityCode = null;
+    $calculationStatus = null;
     $relations = GroupContent::loadByEntity($entity);
     $studyPreset = array();
     $studyPresets = array(); // stores ONLY 1 preset, will be replaced by $studyScenarios
