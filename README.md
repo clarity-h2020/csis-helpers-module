@@ -15,6 +15,22 @@ This module is a collection of functions that allow other components to interact
 
 This module can be installed as any other Drupal module via the "Extend" tab in the Backend. Installation via Composer is not supported. This module has to be placed in the appropriate modules folder (usually "/web/modules/custom/") in order to be found by Drupal. Initial configuration after the install is necessary in order for the module to be able to communicate with external services. For this see next chapter.
 
+### Updating
+
+The module can be updated directly from [git repository](https://github.com/clarity-h2020/csis-helpers-module):
+
+```sh
+sudo su docker
+cd /docker/100-csis/drupal-data/web/modules/custom/csis-helpers-module/
+
+# pull dev or master branch
+git pull
+
+# clear drupal cache
+docker exec --user 999 csis-drupal drush cr
+```
+Note: Commonly on [development instance](https://csis-dev.myclimateservice.eu/) of CSIS  the `dev` branch and on [production instance](https://csis.myclimateservice.eu/) the `master`  branch is used. 
+
 
 ## Configuration
 This module provides a settings form in the BE, which can be accessed by navigating to Configuration -> Development -> CSIS module settings (.../admin/config/csis_helpers/default).
@@ -96,3 +112,7 @@ To specify which Study should be used as the Test-Study, the Group ID of the Stu
 There are two libraries in this module which you can attach to a "View Entity Browser" display of a view.
 - `entitybrowser_helpers`: this attaches a javascript to the entity browser which implements a single selection behavior. ON selection of an element all othe selected elements get unselected
 - `entitybrowser_reorder`: Add css which reorders the elements of a view from header-content-footer to footer-content-header so that controlls in the footer will not be only reachable by scrolling. Additional it also reverts the order of the footer content of the view.
+
+## License
+ 
+MIT © [Austrian Institute Of Technology](https://www.ait.ac.at/)

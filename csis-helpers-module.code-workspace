@@ -8,6 +8,14 @@
 
 		"files.associations": {
 			"*.module": "php"
-		}
+		},
+		"spellright.language": [
+			"en"
+		],
+		"spellright.documentTypes": [
+			"markdown",
+			"latex",
+			"plaintext"
+		]
 	}
 }
