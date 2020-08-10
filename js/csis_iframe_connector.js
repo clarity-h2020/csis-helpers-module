@@ -44,7 +44,8 @@
         if (undefined !== drupalSettings && undefined !== drupalSettings.csisHelpers) {
             var csisHelpers = drupalSettings.csisHelpers;
             var study_uuid, study_area, emikat_id, datapackage_uuid,
-                write_permissions, resource_uuid, time_period, emission_scenario, event_frequency;
+                write_permissions, resource_uuid, time_period, emission_scenario, event_frequency,
+                has_adapted_scenario;
 
             if (undefined !== csisHelpers.resourceInfo && appType == 'ResourcePreviewMap') {
                 console.info(`showing ${appType} for resource ${csisHelpers.resourceInfo.name}`);
@@ -67,6 +68,7 @@
                 emikat_id = csisHelpers.studyInfo.study_emikat_id;
                 datapackage_uuid = csisHelpers.studyInfo.study_datapackage_uuid;
                 write_permissions = csisHelpers.studyInfo.write_permissions;
+                has_adapted_scenario = csisHelpers.studyInfo.has_adapted_scenario;
                 if (undefined !== csisHelpers.studyInfo.study_presets && null !== csisHelpers.studyInfo.study_presets) {
                     time_period = csisHelpers.studyInfo.study_presets.time_period;
                     emission_scenario = csisHelpers.studyInfo.study_presets.emission_scenario;
@@ -94,6 +96,7 @@
             iFrameUrl += emikat_id ? `&emikat_id=${emikat_id}` : '';
             iFrameUrl += datapackage_uuid ? `&datapackage_uuid=${datapackage_uuid}` : '';
             iFrameUrl += write_permissions ? `&write_permissions=${write_permissions}` : '';
+            iFrameUrl += has_adapted_scenario ? `&has_adapted_scenario=${has_adapted_scenario}` : '';
             iFrameUrl += resource_uuid ? `&resource_uuid=${resource_uuid}` : '';
             iFrameUrl += time_period ? `&time_period=${time_period}` : '';
             iFrameUrl += emission_scenario ? `&emissions_scenario=${emission_scenario}` : '';
