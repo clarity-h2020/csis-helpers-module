@@ -112,7 +112,7 @@ var groupContentTemplate = {
 					// remove the relationship between GL-Step and Report Image, since there is no GL-step available
 					delete reportImageTemplate.data.relationships.field_source_step;
 					// instead prepare the template for the additional POST call
-					reportImageTemplate.data.attributes.title = 'Report Image for Study ' + studyID;
+					reportImageTemplate.data.attributes.title = 'Report image';
 					groupContentTemplate.data.relationships.gid.data.id = studyUUID;
 				} else {
 					reportImageTemplate.data.relationships.field_source_step.data.id = stepUUID;
