@@ -166,7 +166,7 @@ class StudyInfoGenerator {
       if ($groupDatapackageID) {
         $datapackageNode = \Drupal\node\Entity\Node::load($groupDatapackageID);
         if ($datapackageNode) {
-          $datapackageUUID = $datapackageNode->uuid();
+          $datapackageUUID = $datapackageNode->get('uuid')->value;
         }
       }
 
